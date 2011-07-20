@@ -295,7 +295,7 @@ ipv4AddrToIPv6AddrTokens t =
 
             toHex a = map (\x -> T.pack $ showIntAtBase 16 intToDigit (read (T.unpack x)::Int) "") $ T.split (=='.') a
 
-            addZero d = if T.length d == 1 then T.pack "0" `T.append` d else d
+            addZero d = if T.length d == 1 then tok0 `T.append` d else d
 
 fromDoubleColon :: [IPv6AddrToken] -> [IPv6AddrToken]
 fromDoubleColon tks = 
