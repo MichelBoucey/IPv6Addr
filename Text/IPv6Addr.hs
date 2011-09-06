@@ -358,10 +358,6 @@ toDoubleColon tks =
 
                     groupZerosRuns = group . filter (/= Colon)
 
---
--- Functions based upon Network.Info to get local MAC and IPv6 adresses.
---
-
 -- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
 --
 -- > macAddrToIPv6AddrTokens "fa:1d:58:cc:95:16" == [SixteenBits "fa1d",Colon,SixteenBits "58cc",Colon,SixteenBits "9516"]
@@ -378,6 +374,10 @@ macAddrToIPv6AddrTokens mac =
        where trans ([],l) = ([],l)
              trans (l1,l2) = do let s = splitAt 2 l1
                                 trans (snd s,l2 ++ [T.concat $ fst s]) 
+
+--
+-- Functions based upon Network.Info to get local MAC and IPv6 adresses.
+--
 
 networkInterfacesIPv6AddrList :: IO [(String,IPv6)]
 networkInterfacesIPv6AddrList = do
