@@ -15,8 +15,7 @@ import Network.Info
 import System.Random (randomRIO)
 import Text.IPv6Addr
 
--- | Returns a random 'SixteenBits' token. E.g. sixteenBitsRand \"d\" may produ
-ce 'SixteenBits' \"d7b5\".
+-- | Returns a random 'SixteenBits' token. E.g. sixteenBitsRand \"d\" may produce 'SixteenBits' \"d7b5\".
 sixteenBitsRand :: String -> IO IPv6AddrToken
 sixteenBitsRand s =
     if all isHexDigit s && l < 4
