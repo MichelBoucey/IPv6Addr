@@ -17,6 +17,7 @@ module Text.IPv6Addr(
     maybeExpIPv6Addr,
     -- * Manipulating IPv6 address tokens
     -- ** To IPv6 Address token(s)
+    maybeIPv6AddrToken,
     maybeIPv6AddrTokens,
     sixteenBitsRand,
     ipv4AddrToIPv6AddrTokens,
@@ -31,9 +32,7 @@ import Data.List (group,isSuffixOf,elemIndex,elemIndices,intersperse)
 import Data.Maybe (fromJust,isJust)
 import qualified Data.Text as T
 import Data.Text.Read (decimal)
-import Network.Info
 import Numeric (showIntAtBase)
-import System.Random (randomRIO)
 
 type IPv6Addr = T.Text
 
@@ -129,11 +128,8 @@ sixteenBitsRand s =
            a <- replicateM (4-l) hexRand
            return $ SixteenBits $ T.toLower $ T.pack $ s ++ a
        else return $ SixteenBits tok0
-
     where
-
         l = length s
-
         hexRand = do r <- randomRIO(0,15)
                      return $ intToDigit r
 
