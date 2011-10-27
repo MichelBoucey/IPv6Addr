@@ -19,7 +19,6 @@ module Text.IPv6Addr(
     -- ** To IPv6 Address token(s)
     maybeIPv6AddrToken,
     maybeIPv6AddrTokens,
-    sixteenBitsRand,
     ipv4AddrToIPv6AddrTokens,
     -- ** Back to Text
     ipv6TokensToText,
@@ -119,19 +118,6 @@ sixteenBits t =
                         else Just $ SixteenBits $ T.toLower t'
                 else Nothing
     else Nothing
-
--- | Returns a random 'SixteenBits' token. E.g. sixteenBitsRand \"d\" may produce 'SixteenBits' \"d7b5\".
-sixteenBitsRand :: String -> IO IPv6AddrToken
-sixteenBitsRand s =
-    if all isHexDigit s && l < 4
-       then do
-           a <- replicateM (4-l) hexRand
-           return $ SixteenBits $ T.toLower $ T.pack $ s ++ a
-       else return $ SixteenBits tok0
-    where
-        l = length s
-        hexRand = do r <- randomRIO(0,15)
-                     return $ intToDigit r
 
 -- | Returns Just an 'IPv6Addr', or Nothing.
 --
