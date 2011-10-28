@@ -87,7 +87,7 @@ getTokIPv6AddrOf s = do
 -- | Given the valid name of a local network interface, returns the corresponding list of 'IPv6AddrToken' of the interface's MAC Address.
 getTokMacAddrOf :: String -> IO (Maybe [IPv6AddrToken])
 getTokMacAddrOf s = do
-    l <-networkInterfacesMacAddrList
+    l <- networkInterfacesMacAddrList
     case lookup s l of
         Just a -> return $ Just $ macAddrToIPv6AddrTokens $ T.pack $ show a
         Nothing -> return Nothing

@@ -61,7 +61,7 @@ tok5efe = T.pack "5efe"
 tok200 = T.pack "200"
 
 tokenizeBy :: Char -> T.Text -> [T.Text]
-tokenizeBy c = T.groupBy ((==) `on` (==c))
+tokenizeBy c = T.groupBy ((==) `on` (== c))
 
 --
 -- Parsing embedded IPv4 address
@@ -124,17 +124,13 @@ sixteenBits t =
 -- > maybeIPv6Addr "D045::00Da:0fA9:0:0:230.34.110.80" == Just "d045:0:da:fa9::e622:6e50"
 --
 maybeIPv6Addr :: T.Text -> Maybe IPv6Addr
-maybeIPv6Addr t = 
-     case maybeTokIPv6Addr t of
-         Just a -> Just $ ipv6TokensToText a
-         Nothing -> Nothing
+maybeIPv6Addr t = maybeTokIPv6Addr t >>= ipv6TokensToText
 
 -- | Returns Just an expanded IPv6 address, or Nothing.
 maybeExpIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybeExpIPv6Addr t = 
-     case maybeTokIPv6Addr t of
-         Just a -> Just $ ipv6TokensToText $ fromDoubleColon a
-         Nothing -> Nothing
+    do a <- maybeTokIPv6Addr t
+       ipv6TokensToText $ fromDoubleColon a
 
 -- | Returns Just one of the valid 'IPv6AddrToken', or Nothing.
 maybeIPv6AddrToken :: T.Text -> Maybe IPv6AddrToken
@@ -144,7 +140,6 @@ maybeIPv6AddrToken t
     | isJust(doubleColon t) = Just DoubleColon
     | isJust(ipv4Addr t) = Just (IPv4Addr t)
     | otherwise = Nothing
-
     where t' = sixteenBits t
 
 -- | Returns the corresponding 'Text' of an IPv6 address token.
@@ -157,8 +152,8 @@ ipv6TokenToText AllZeros = tok0
 ipv6TokenToText (IPv4Addr a) = a
 
 -- | Given an arbitrary list of 'IPv6AddrToken', returns the corresponding 'Text'.
-ipv6TokensToText :: [IPv6AddrToken] -> T.Text
-ipv6TokensToText l = T.concat $ map ipv6TokenToText l
+ipv6TokensToText :: [IPv6AddrToken] -> Maybe IPv6Addr
+ipv6TokensToText l = Just $ T.concat $ map ipv6TokenToText l
 
 -- | Returns True if a list of 'IPv6AddrToken' constitutes a valid IPv6 Address.
 isIPv6Addr :: [IPv6AddrToken] -> Bool
@@ -183,9 +178,7 @@ isIPv6Addr tks =
                               (lentks == 13 && cdctks == 0) || (lentks < 12 && cdctks == 1)
                           otherwise -> False
                 otherwise -> False))
-
             where
-
                 diffNext [_] = True
                 diffNext [a,a'] = a /= a'
                 diffNext (a:as) = (a /= head as) && diffNext as
@@ -208,24 +201,17 @@ countIPv4Addr tks =
 
 -- | Returns Just a list of 'IPv6AddrToken', or Nothing.
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
-maybeIPv6AddrTokens t = mapM maybeIPv6AddrToken (tokenizeBy ':' t)
+maybeIPv6AddrTokens t = mapM maybeIPv6AddrToken $ tokenizeBy ':' t
 
 -- | This is the main function which returns Just the list of a tokenized IPv6 address's
 -- text representation validated against RFC 4291 and canonized (rewritten) in conformation
 -- with RFC 5952, or Nothing.
 maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
-maybeTokIPv6Addr t =
-    case maybeIPv6AddrTokens t of
-        Nothing -> Nothing
-        Just a ->
-            if isIPv6Addr a
-                then Just $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) a
-            else Nothing
-
-        where
-
-            ipv4AddrReplacement tks =
-                if ipv4AddrRewrite tks then init tks ++ ipv4AddrToIPv6AddrTokens (last tks) else tks
+maybeTokIPv6Addr t = 
+    do ltks <- maybeIPv6AddrTokens t
+       if isIPv6Addr ltks then Just $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks else Nothing
+       where
+           ipv4AddrReplacement ltks' = if ipv4AddrRewrite ltks' then init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks') else ltks'
 
 -- | An embedded IPv4 address have to be rewritten to output a pure IPv6 Address
 -- text representation in hexadecimal digits. But some well-known prefixed IPv6
@@ -268,9 +254,7 @@ ipv4AddrToIPv6AddrTokens t =
             [fromJust $ sixteenBits ((!!) m 0 `T.append` addZero ((!!) m 1)),Colon,
              fromJust $ sixteenBits ((!!) m 2 `T.append` addZero ((!!) m 3))]
         otherwise -> []
-
         where
-
             toHex a = map (\x -> T.pack $ showIntAtBase 16 intToDigit (read (T.unpack x)::Int) "") $ T.split (=='.') a
 
             addZero d = if T.length d == 1 then tok0 `T.append` d else d
@@ -285,11 +269,8 @@ fromDoubleColon tks =
         let fste = if null fsts then [] else fsts ++ [Colon]
         let snde = if null snds then [] else Colon : snds
         fste ++ allZerosTokensReplacement(quantityOfAllZerosTokenToReplace tks) ++ snde
-
         where quantityOfAllZerosTokenToReplace x =
-                  ntks tks - foldl (\c x -> if (x /= DoubleColon) && (x /= Colon)
-                                     then c+1 else c) 0 x
-
+                  ntks tks - foldl (\c x -> if (x /= DoubleColon) && (x /= Colon) then c+1 else c) 0 x
                   where ntks tks = if countIPv4Addr tks == 1 then 7 else 8
 
               allZerosTokensReplacement x = intersperse Colon (replicate x AllZeros)
@@ -297,9 +278,7 @@ fromDoubleColon tks =
 toDoubleColon :: [IPv6AddrToken] -> [IPv6AddrToken]
 toDoubleColon tks =
     zerosToDoubleColon tks (zerosRunToReplace $ zerosRunsList tks)
-
         where
-
             zerosToDoubleColon :: [IPv6AddrToken] -> (Int,Int) -> [IPv6AddrToken]
             -- No all zeros token, so no double colon replacement...
             zerosToDoubleColon ls (_,0) = ls
@@ -313,25 +292,20 @@ toDoubleColon tks =
                 let l = longestLengthZerosRun t
                 in (firstLongestZerosRunIndex t l,l)
                     where
-
                         firstLongestZerosRunIndex x y =
                             sum . snd . unzip $ takeWhile (/=(True,y)) x
 
                         longestLengthZerosRun x =
                             maximum $ map longest x
-
-                              where longest t = case t of
-                                                    (True,i) -> i
-                                                    otherwise -> 0
+                            where longest t = case t of
+                                                  (True,i) -> i
+                                                  otherwise -> 0
 
             zerosRunsList x = map helper $ groupZerosRuns x
-
                 where
-
                     helper h =
                         if head h == AllZeros
                         then (True,lh) else (False,lh)
-
                         where lh = length h
 
                     groupZerosRuns = group . filter (/= Colon)
