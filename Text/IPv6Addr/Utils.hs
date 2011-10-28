@@ -6,10 +6,18 @@
 --
 -- Dealing with IPv6 address's text representation. Main features are validation against RFC 4291 and canonization in conformation with RFC 5952.
 
-module Text.IPv6Addr.Utils where
+module Text.IPv6Addr.Utils (
+    sixteenBitsRand,
+    macAddrToIPv6AddrTokens,
+    getIPv6AddrOf, 
+    getTokIPv6AddrOf,
+    getTokMacAddrOf
+) where
 
-import Data.List (group,isSuffixOf,elemIndex,elemIndices,intersperse)
-import Data.Maybe (fromJust,isJust)
+import Control.Monad (replicateM)
+import Data.Char (intToDigit,isHexDigit)
+import Data.List (intersperse)
+import Data.Maybe (fromJust)
 import qualified Data.Text as T
 import Network.Info
 import System.Random (randomRIO)
@@ -22,7 +30,7 @@ sixteenBitsRand s =
        then do
            a <- replicateM (4-l) hexRand
            return $ SixteenBits $ T.toLower $ T.pack $ s ++ a
-       else return $ SixteenBits tok0
+       else return $ SixteenBits $ T.pack "0"
     where
         l = length s
         hexRand = do r <- randomRIO(0,15)
@@ -40,7 +48,6 @@ macAddrToIPv6AddrTokens mac =
                   intersperse Colon $ map (fromJust . maybeIPv6AddrToken) p
                else []
            else []
-
        where trans ([],l) = ([],l)
              trans (l1,l2) = do let s = splitAt 2 l1
                                 trans (snd s,l2 ++ [T.concat $ fst s]) 
