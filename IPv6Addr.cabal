@@ -1,5 +1,5 @@
 name:		IPv6Addr
-version:	0.1
+version:	0.2
 license:	BSD3
 license-file:	LICENSE
 Copyright:      Copyright © 2011 - Michel Boucey
@@ -24,3 +24,4 @@ Library
                  random
 
   exposed-modules: Text.IPv6Addr
+                   Text.IPv6Addr.Utils

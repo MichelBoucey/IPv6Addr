@@ -14,7 +14,7 @@ module Text.IPv6Addr(
     isIPv6Addr,
     maybeIPv6Addr,
     maybeTokIPv6Addr,
-    maybeExpIPv6Addr,
+    maybeFullIPv6Addr,
     -- * Manipulating IPv6 address tokens
     -- ** To IPv6 Address token(s)
     maybeIPv6AddrToken,
@@ -52,7 +52,7 @@ tokdot = T.pack "."
 tokcolon = T.pack ":"
 tokdcolon = T.pack "::"
 tok0 = T.pack "0"
-tok0x4 = T.pack "0000"
+tok4x0 = T.pack "0000"
 tok1 = T.pack "1"
 tokffff = T.pack "ffff"
 tok64 = T.pack "64"
@@ -128,16 +128,20 @@ maybeIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybeIPv6Addr t = maybeTokIPv6Addr t >>= ipv6TokensToText
 
 -- | Returns Just an expanded IPv6 address, or Nothing.
-maybeExpIPv6Addr :: T.Text -> Maybe IPv6Addr
-maybeExpIPv6Addr t = 
+maybeFullIPv6Addr :: T.Text -> Maybe IPv6Addr
+maybeFullIPv6Addr t = 
     do a <- maybeTokIPv6Addr t
-       ipv6TokensToText $ fromDoubleColon a
+       ipv6TokensToText $ expandTokens $ fromDoubleColon a
 
-expandIPv6AddrToken :: IPv6AddrToken -> IPv6AddrToken
-expandIPv6AddrToken AllZeros = (SixteenBits tok0x4)
-expandIPv6AddrToken (SixteenBits s) =
-    do let ls = T.length s
-       if ls < 4 then SixteenBits ((T.replicate (4 - ls) tok0) `T.append` s) else (SixteenBits s)
+expandTokens :: [IPv6AddrToken] -> [IPv6AddrToken]
+expandTokens =
+    map expTok
+       where
+           expTok AllZeros = SixteenBits tok4x0
+           expTok (SixteenBits s) =
+               do let ls = T.length s
+                  if ls < 4 then SixteenBits (T.replicate (4 - ls) tok0 `T.append` s) else SixteenBits s
+           expTok t = t
 
 -- | Returns Just one of the valid 'IPv6AddrToken', or Nothing.
 maybeIPv6AddrToken :: T.Text -> Maybe IPv6AddrToken
@@ -217,8 +221,13 @@ maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokIPv6Addr t = 
     do ltks <- maybeIPv6AddrTokens t
        if isIPv6Addr ltks then Just $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks else Nothing
+
        where
-           ipv4AddrReplacement ltks' = if ipv4AddrRewrite ltks' then init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks') else ltks'
+
+           ipv4AddrReplacement ltks' =
+               if ipv4AddrRewrite ltks'
+               then init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks')
+               else ltks'
 
 -- | An embedded IPv4 address have to be rewritten to output a pure IPv6 Address
 -- text representation in hexadecimal digits. But some well-known prefixed IPv6
@@ -240,13 +249,13 @@ ipv4AddrRewrite tks =
     case last tks of
         IPv4Addr _ -> do
             let itks = init tks
-            not (itks == [DoubleColon]
-                || itks == [DoubleColon,SixteenBits tokffff,Colon]
-                || itks == [DoubleColon,SixteenBits tokffff,Colon,AllZeros,Colon]
-                || itks == [SixteenBits tok64,Colon,SixteenBits tokff9b,DoubleColon]
-                || [SixteenBits tok200,Colon,SixteenBits tok5efe,Colon] `isSuffixOf` itks
-                || [AllZeros,Colon,SixteenBits tok5efe,Colon] `isSuffixOf` itks
-                || [DoubleColon,SixteenBits tok5efe,Colon] `isSuffixOf` itks)
+            (itks == [DoubleColon]
+             || itks == [DoubleColon,SixteenBits tokffff,Colon]
+             || itks == [DoubleColon,SixteenBits tokffff,Colon,AllZeros,Colon]
+             || itks == [SixteenBits tok64,Colon,SixteenBits tokff9b,DoubleColon]
+             || [SixteenBits tok200,Colon,SixteenBits tok5efe,Colon] `isSuffixOf` itks
+             || [AllZeros,Colon,SixteenBits tok5efe,Colon] `isSuffixOf` itks
+             || [DoubleColon,SixteenBits tok5efe,Colon] `isSuffixOf` itks)
         otherwise -> False
 
 -- | Rewrites Just an embedded 'IPv4Addr' into the corresponding list of pure IPv6Addr tokens, or returns an empty list.
