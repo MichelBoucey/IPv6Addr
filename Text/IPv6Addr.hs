@@ -52,6 +52,7 @@ tokdot = T.pack "."
 tokcolon = T.pack ":"
 tokdcolon = T.pack "::"
 tok0 = T.pack "0"
+tok0x4 = T.pack "0000"
 tok1 = T.pack "1"
 tokffff = T.pack "ffff"
 tok64 = T.pack "64"
@@ -132,6 +133,12 @@ maybeExpIPv6Addr t =
     do a <- maybeTokIPv6Addr t
        ipv6TokensToText $ fromDoubleColon a
 
+expandIPv6AddrToken :: IPv6AddrToken -> IPv6AddrToken
+expandIPv6AddrToken AllZeros = (SixteenBits tok0x4)
+expandIPv6AddrToken (SixteenBits s) =
+    do let ls = T.length s
+       if ls < 4 then SixteenBits ((T.replicate (4 - ls) tok0) `T.append` s) else (SixteenBits s)
+
 -- | Returns Just one of the valid 'IPv6AddrToken', or Nothing.
 maybeIPv6AddrToken :: T.Text -> Maybe IPv6AddrToken
 maybeIPv6AddrToken t
@@ -152,7 +159,7 @@ ipv6TokenToText AllZeros = tok0
 ipv6TokenToText (IPv4Addr a) = a
 
 -- | Given an arbitrary list of 'IPv6AddrToken', returns the corresponding 'Text'.
-ipv6TokensToText :: [IPv6AddrToken] -> Maybe IPv6Addr
+ipv6TokensToText :: [IPv6AddrToken] -> Maybe T.Text
 ipv6TokensToText l = Just $ T.concat $ map ipv6TokenToText l
 
 -- | Returns True if a list of 'IPv6AddrToken' constitutes a valid IPv6 Address.
@@ -256,7 +263,6 @@ ipv4AddrToIPv6AddrTokens t =
         otherwise -> []
         where
             toHex a = map (\x -> T.pack $ showIntAtBase 16 intToDigit (read (T.unpack x)::Int) "") $ T.split (=='.') a
-
             addZero d = if T.length d == 1 then tok0 `T.append` d else d
 
 fromDoubleColon :: [IPv6AddrToken] -> [IPv6AddrToken]
@@ -272,7 +278,6 @@ fromDoubleColon tks =
         where quantityOfAllZerosTokenToReplace x =
                   ntks tks - foldl (\c x -> if (x /= DoubleColon) && (x /= Colon) then c+1 else c) 0 x
                   where ntks tks = if countIPv4Addr tks == 1 then 7 else 8
-
               allZerosTokensReplacement x = intersperse Colon (replicate x AllZeros)
 
 toDoubleColon :: [IPv6AddrToken] -> [IPv6AddrToken]
@@ -287,20 +292,15 @@ toDoubleColon tks =
             zerosToDoubleColon ls (i,l) =
                 let ls' = filter (/= Colon) ls
                 in intersperse Colon (take i ls') ++ [DoubleColon] ++ intersperse Colon (drop (i+l) ls')
-
             zerosRunToReplace t =
                 let l = longestLengthZerosRun t
                 in (firstLongestZerosRunIndex t l,l)
                     where
-                        firstLongestZerosRunIndex x y =
-                            sum . snd . unzip $ takeWhile (/=(True,y)) x
-
-                        longestLengthZerosRun x =
-                            maximum $ map longest x
-                            where longest t = case t of
-                                                  (True,i) -> i
-                                                  otherwise -> 0
-
+                        firstLongestZerosRunIndex x y = sum . snd . unzip $ takeWhile (/=(True,y)) x
+                        longestLengthZerosRun x = maximum $ map longest x
+                                                  where longest t = case t of
+                                                                        (True,i) -> i
+                                                                        otherwise -> 0
             zerosRunsList x = map helper $ groupZerosRuns x
                 where
                     helper h =
