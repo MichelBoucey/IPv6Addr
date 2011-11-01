@@ -32,6 +32,7 @@ import Data.Maybe (fromJust,isJust)
 import qualified Data.Text as T
 import Data.Text.Read (decimal)
 import Numeric (showIntAtBase)
+import Text.IPv6Addr.Internals
 
 type IPv6Addr = T.Text
 
@@ -43,12 +44,7 @@ data IPv6AddrToken
     | IPv4Addr T.Text    -- ^ An embedded IPv4 address as representation of the last 32-Bit
     deriving (Eq,Show)
 
-data IPv4AddrToken 
-    = Dot
-    | EightBits T.Text deriving (Eq,Show)
-
 -- | Some useful tokens
-tokdot = T.pack "."
 tokcolon = T.pack ":"
 tokdcolon = T.pack "::"
 tok0 = T.pack "0"
@@ -60,35 +56,6 @@ tokff9b = T.pack "ff9b"
 tokfe80 = T.pack "fe80"
 tok5efe = T.pack "5efe"
 tok200 = T.pack "200"
-
-tokenizeBy :: Char -> T.Text -> [T.Text]
-tokenizeBy c = T.groupBy ((==) `on` (== c))
-
---
--- Parsing embedded IPv4 address
---
-
-dot :: T.Text -> Maybe IPv4AddrToken
-dot s = if s == tokdot then Just Dot else Nothing
-
-eightBitsToken :: T.Text -> Maybe IPv4AddrToken
-eightBitsToken t =
-    case decimal t of
-        Right p -> do let i = fst p
-                      if i >= 0 && i <= 255 && snd p == T.empty
-                          then Just (EightBits t) 
-                          else Nothing
-        Left _ -> Nothing
-
-ipv4Token :: T.Text -> Maybe IPv4AddrToken
-ipv4Token t
-    | isJust(dot t) = Just Dot
-    | isJust(eightBitsToken t) = Just (EightBits t)
-    | otherwise  = Nothing
-
---
--- Parsing IPv6 Address
---
 
 -- | Returns an IPv4 address as an IPv6 address token.
 ipv4Addr :: T.Text -> Maybe IPv6AddrToken

@@ -22,6 +22,7 @@ import qualified Data.Text as T
 import Network.Info
 import System.Random (randomRIO)
 import Text.IPv6Addr
+import Text.IPv6Addr.Internals
 
 -- | Returns a random 'SixteenBits' token. E.g. sixteenBitsRand \"d\" may produce 'SixteenBits' \"d7b5\".
 sixteenBitsRand :: String -> IO (Maybe IPv6AddrToken)
