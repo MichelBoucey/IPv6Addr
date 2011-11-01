@@ -17,7 +17,7 @@ module Text.IPv6Addr.Utils (
 import Control.Monad (replicateM)
 import Data.Char (intToDigit,isHexDigit)
 import Data.List (intersperse)
-import Data.Maybe (fromJust)
+import Data.Maybe (catMaybes,fromJust)
 import qualified Data.Text as T
 import Network.Info
 import System.Random (randomRIO)
@@ -37,6 +37,12 @@ sixteenBitsRand s =
 
         hexRand = do r <- randomRIO(0,15)
                      return $ intToDigit r
+
+ipv6AddrRand :: IO (Maybe IPv6Addr)
+ipv6AddrRand =
+    do
+        l <- replicateM 8 (sixteenBitsRand "")
+        return $ ipv6TokensToText $ intersperse Colon $ catMaybes l
 
 -- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
 --
