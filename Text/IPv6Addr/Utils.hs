@@ -24,15 +24,17 @@ import System.Random (randomRIO)
 import Text.IPv6Addr
 
 -- | Returns a random 'SixteenBits' token. E.g. sixteenBitsRand \"d\" may produce 'SixteenBits' \"d7b5\".
-sixteenBitsRand :: String -> IO IPv6AddrToken
+sixteenBitsRand :: String -> IO (Maybe IPv6AddrToken)
 sixteenBitsRand s =
-    if all isHexDigit s && l < 4
+    do let l = length s
+       if all isHexDigit s && l < 4
        then do
            a <- replicateM (4-l) hexRand
-           return $ SixteenBits $ T.toLower $ T.pack $ s ++ a
-       else return $ SixteenBits $ T.pack "0"
+           return $ Just $ SixteenBits $ T.toLower $ T.pack $ s ++ a
+       else return Nothing
+
     where
-        l = length s
+
         hexRand = do r <- randomRIO(0,15)
                      return $ intToDigit r
 
@@ -48,9 +50,12 @@ macAddrToIPv6AddrTokens mac =
                   intersperse Colon $ map (fromJust . maybeIPv6AddrToken) p
                else []
            else []
-       where trans ([],l) = ([],l)
-             trans (l1,l2) = do let s = splitAt 2 l1
-                                trans (snd s,l2 ++ [T.concat $ fst s]) 
+
+       where
+
+           trans ([],l) = ([],l)
+           trans (l1,l2) = do let s = splitAt 2 l1
+                              trans (snd s,l2 ++ [T.concat $ fst s]) 
 
 --
 -- Functions based upon Network.Info to get local MAC and IPv6 adresses.
@@ -60,12 +65,14 @@ networkInterfacesIPv6AddrList :: IO [(String,IPv6)]
 networkInterfacesIPv6AddrList = do
     n <- getNetworkInterfaces
     return $ map networkInterfacesIPv6Addr n 
+
     where networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)
 
 networkInterfacesMacAddrList :: IO [(String,MAC)]
 networkInterfacesMacAddrList = do
     n <- getNetworkInterfaces
     return $ map networkInterfacesMac n 
+
     where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
 
 -- | Given a valid name of a local network interface, e.g. getIPv6AddrOf \"eth0\", return Just the interface's IPv6 address.
