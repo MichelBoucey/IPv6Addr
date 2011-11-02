@@ -8,6 +8,7 @@
 
 module Text.IPv6Addr.Utils (
     sixteenBitsRand,
+    ipv6AddrRand,
     macAddrToIPv6AddrTokens,
     getIPv6AddrOf, 
     getTokIPv6AddrOf,
@@ -34,10 +35,18 @@ sixteenBitsRand s =
            return $ Just $ SixteenBits $ T.toLower $ T.pack $ s ++ a
        else return Nothing
 
-    where
+hexRand = do r <- randomRIO(0,15)
+             return $ intToDigit r
 
-        hexRand = do r <- randomRIO(0,15)
-                     return $ intToDigit r
+getHex c = 
+    case c of
+        '_' -> hexRand
+        otherwise -> return c 
+
+getSixteenBitsToken m = map getHex m
+
+-- sixteenBitsRandN :: String
+-- sixteenBitsRandN = "test_GT_" >>= getHex 
 
 ipv6AddrRand :: IO (Maybe IPv6Addr)
 ipv6AddrRand =

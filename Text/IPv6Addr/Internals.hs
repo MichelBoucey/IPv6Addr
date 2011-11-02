@@ -15,6 +15,20 @@ import Data.Maybe (isJust)
 import qualified Data.Text as T
 import Data.Text.Read (decimal)
 
+-- | Some useful tokens
+tokdot = T.pack "."
+tokcolon = T.pack ":"
+tokdcolon = T.pack "::"
+tok0 = T.pack "0"
+tok4x0 = T.pack "0000"
+tok1 = T.pack "1"
+tokffff = T.pack "ffff"
+tok64 = T.pack "64"
+tokff9b = T.pack "ff9b"
+tokfe80 = T.pack "fe80"
+tok5efe = T.pack "5efe"
+tok200 = T.pack "200"
+
 tokenizeBy :: Char -> T.Text -> [T.Text]
 tokenizeBy c = T.groupBy ((==) `on` (== c))
 
@@ -27,7 +41,7 @@ data IPv4AddrToken
     | EightBits T.Text deriving (Eq,Show)
 
 dot :: T.Text -> Maybe IPv4AddrToken
-dot s = if s == (T.pack ".") then Just Dot else Nothing
+dot s = if s == tokdot then Just Dot else Nothing
 
 eightBitsToken :: T.Text -> Maybe IPv4AddrToken
 eightBitsToken t =

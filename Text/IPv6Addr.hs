@@ -44,19 +44,6 @@ data IPv6AddrToken
     | IPv4Addr T.Text    -- ^ An embedded IPv4 address as representation of the last 32-Bit
     deriving (Eq,Show)
 
--- | Some useful tokens
-tokcolon = T.pack ":"
-tokdcolon = T.pack "::"
-tok0 = T.pack "0"
-tok4x0 = T.pack "0000"
-tok1 = T.pack "1"
-tokffff = T.pack "ffff"
-tok64 = T.pack "64"
-tokff9b = T.pack "ff9b"
-tokfe80 = T.pack "fe80"
-tok5efe = T.pack "5efe"
-tok200 = T.pack "200"
-
 -- | Returns an IPv4 address as an IPv6 address token.
 ipv4Addr :: T.Text -> Maybe IPv6AddrToken
 ipv4Addr t =
