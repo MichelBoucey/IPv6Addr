@@ -7,8 +7,7 @@
 -- Dealing with IPv6 address's text representation. Main features are validation against RFC 4291 and canonization in conformation with RFC 5952.
 
 module Text.IPv6Addr.Utils (
-    sixteenBitsRand,
-    ipv6AddrRand,
+    sixteenBitsArbitraryToken,
     macAddrToIPv6AddrTokens,
     getIPv6AddrOf, 
     getTokIPv6AddrOf,
@@ -25,33 +24,25 @@ import System.Random (randomRIO)
 import Text.IPv6Addr
 import Text.IPv6Addr.Internals
 
--- | Returns a random 'SixteenBits' token. E.g. sixteenBitsRand \"d\" may produce 'SixteenBits' \"d7b5\".
-sixteenBitsRand :: String -> IO (Maybe IPv6AddrToken)
-sixteenBitsRand s =
-    do let l = length s
-       if all isHexDigit s && l < 4
-       then do
-           a <- replicateM (4-l) hexRand
-           return $ Just $ SixteenBits $ T.toLower $ T.pack $ s ++ a
-       else return Nothing
+-- | Returns an arbitrary 'SixteenBits' token based on a mask ...
+sixteenBitsArbitraryToken m = 
+    do
+        cs <- mapM getHex m
+        -- to be replaced by sixteenBits validation function
+        return $ Just $ SixteenBits $ T.pack $ cs
 
-hexRand = do r <- randomRIO(0,15)
-             return $ intToDigit r
+        where getHex c =
+                  case c of
+                      '_' -> hexRand
+                      otherwise -> return c
 
-getHex c = 
-    case c of
-        '_' -> hexRand
-        otherwise -> return c 
-
-getSixteenBitsToken m = map getHex m
-
--- sixteenBitsRandN :: String
--- sixteenBitsRandN = "test_GT_" >>= getHex 
+                  where hexRand = do r <- randomRIO(0,15)
+                                     return $ intToDigit r
 
 ipv6AddrRand :: IO (Maybe IPv6Addr)
 ipv6AddrRand =
     do
-        l <- replicateM 8 (sixteenBitsRand "")
+        l <- replicateM 8 (sixteenBitsArbitraryToken "____")
         return $ ipv6TokensToText $ intersperse Colon $ catMaybes l
 
 -- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
