@@ -24,26 +24,24 @@ import System.Random (randomRIO)
 import Text.IPv6Addr
 import Text.IPv6Addr.Internals
 
--- | Returns an arbitrary 'SixteenBits' token based on a mask ...
-sixteenBitsArbitraryToken m = 
-    do
-        cs <- mapM getHex m
-        -- to be replaced by sixteenBits validation function
-        return $ Just $ SixteenBits $ T.pack $ cs
+-- | Returns an arbitrary 'SixteenBits' token based on a mask \"____\"
+sixteenBitsArbitraryToken :: [Char] -> IO (Maybe IPv6AddrToken)
+sixteenBitsArbitraryToken m = do
+    cs <- mapM getHex m
+    return $ sixteenBits $ T.pack cs
 
-        where getHex c =
-                  case c of
-                      '_' -> hexRand
-                      otherwise -> return c
+    where getHex c =
+              case c of
+                  '_' -> hexRand
+                  otherwise -> return c
 
-                  where hexRand = do r <- randomRIO(0,15)
-                                     return $ intToDigit r
+              where hexRand = do r <- randomRIO(0,15)
+                                 return $ intToDigit r
 
 ipv6AddrRand :: IO (Maybe IPv6Addr)
 ipv6AddrRand =
-    do
-        l <- replicateM 8 (sixteenBitsArbitraryToken "____")
-        return $ ipv6TokensToText $ intersperse Colon $ catMaybes l
+    do l <- replicateM 8 (sixteenBitsArbitraryToken "____")
+       return $ ipv6TokensToText $ intersperse Colon $ catMaybes l
 
 -- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
 --

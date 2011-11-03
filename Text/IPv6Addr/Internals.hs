@@ -15,6 +15,20 @@ import Data.Maybe (isJust)
 import qualified Data.Text as T
 import Data.Text.Read (decimal)
 
+type IPv6Addr = T.Text
+
+data IPv6AddrToken
+    = SixteenBits T.Text -- ^ A four hexadecimal digits group representing a 16-Bit chunk
+    | AllZeros           -- ^ An all zeros 16-Bit chunk
+    | Colon              -- ^ A separator between 16-Bit chunks
+    | DoubleColon        -- ^ A double-colon stands for a unique compression of many consecutive 16-Bit chunks
+    | IPv4Addr T.Text    -- ^ An embedded IPv4 address as representation of the last 32-Bit
+    deriving (Eq,Show)
+
+data IPv4AddrToken
+    = Dot
+    | EightBits T.Text deriving (Eq,Show)
+
 -- | Some useful tokens
 tokdot = T.pack "."
 tokcolon = T.pack ":"
@@ -33,12 +47,8 @@ tokenizeBy :: Char -> T.Text -> [T.Text]
 tokenizeBy c = T.groupBy ((==) `on` (== c))
 
 --
--- Parsing embedded IPv4 address
+-- Validation of IPv6 adress tokens
 --
-
-data IPv4AddrToken
-    = Dot
-    | EightBits T.Text deriving (Eq,Show)
 
 dot :: T.Text -> Maybe IPv4AddrToken
 dot s = if s == tokdot then Just Dot else Nothing
@@ -57,3 +67,32 @@ ipv4Token t
     | isJust(dot t) = Just Dot
     | isJust(eightBitsToken t) = Just (EightBits t)
     | otherwise  = Nothing
+
+ipv4Addr :: T.Text -> Maybe IPv6AddrToken
+ipv4Addr t =
+    do
+        let r = map ipv4Token $ tokenizeBy '.' t
+        if (Nothing `notElem` r) && (length r == 7)
+            then Just (IPv4Addr t) else Nothing
+
+colon :: T.Text -> Maybe IPv6AddrToken
+colon t = if t == tokcolon then Just Colon else Nothing
+
+doubleColon :: T.Text -> Maybe IPv6AddrToken
+doubleColon t = if t == tokdcolon then Just DoubleColon else Nothing
+
+-- | Returns a SixteenBits token.
+sixteenBits:: T.Text -> Maybe IPv6AddrToken
+sixteenBits t =
+    if T.length t < 5 then
+        do
+            -- "Leading zeros MUST be suppressed" (RFC 5952, 4.1)
+            let t'= T.dropWhile (=='0') t
+            if T.length t' < 5 && T.all isHexDigit t'
+                then
+                    if T.null t'
+                        then Just AllZeros
+                        -- Hexadecimal digits MUST be in lowercase (RFC 5952 4.3)
+                        else Just $ SixteenBits $ T.toLower t'
+                else Nothing
+    else Nothing
