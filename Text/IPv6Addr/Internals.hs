@@ -5,7 +5,9 @@
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address's text representation. Main features are validation against RFC 4291 and canonization in conformation with RFC 5952.
+-- Dealing with IPv6 address's text representation.
+-- Main features are validation against RFC 4291 and canonization
+-- in conformation with RFC 5952.
 
 module Text.IPv6Addr.Internals where
 
@@ -58,8 +60,8 @@ eightBitsToken t =
     case decimal t of
         Right p -> do let i = fst p
                       if i >= 0 && i <= 255 && snd p == T.empty
-                          then Just (EightBits t) 
-                          else Nothing
+                      then Just (EightBits t) 
+                      else Nothing
         Left _ -> Nothing
 
 ipv4Token :: T.Text -> Maybe IPv4AddrToken
@@ -69,11 +71,11 @@ ipv4Token t
     | otherwise  = Nothing
 
 ipv4Addr :: T.Text -> Maybe IPv6AddrToken
-ipv4Addr t =
-    do
-        let r = map ipv4Token $ tokenizeBy '.' t
-        if (Nothing `notElem` r) && (length r == 7)
-            then Just (IPv4Addr t) else Nothing
+ipv4Addr t = do
+    let r = map ipv4Token $ tokenizeBy '.' t
+    if (Nothing `notElem` r) && (length r == 7)
+    then Just (IPv4Addr t)
+    else Nothing
 
 colon :: T.Text -> Maybe IPv6AddrToken
 colon t = if t == tokcolon then Just Colon else Nothing
@@ -84,15 +86,14 @@ doubleColon t = if t == tokdcolon then Just DoubleColon else Nothing
 -- | Returns a SixteenBits token.
 sixteenBits:: T.Text -> Maybe IPv6AddrToken
 sixteenBits t =
-    if T.length t < 5 then
-        do
-            -- "Leading zeros MUST be suppressed" (RFC 5952, 4.1)
-            let t'= T.dropWhile (=='0') t
-            if T.length t' < 5 && T.all isHexDigit t'
-                then
-                    if T.null t'
-                        then Just AllZeros
-                        -- Hexadecimal digits MUST be in lowercase (RFC 5952 4.3)
-                        else Just $ SixteenBits $ T.toLower t'
-                else Nothing
+    if T.length t < 5
+    then do
+        -- "Leading zeros MUST be suppressed" (RFC 5952, 4.1)
+        let t'= T.dropWhile (=='0') t
+        if T.length t' < 5 && T.all isHexDigit t'
+        then if T.null t'
+             then Just AllZeros
+             -- Hexadecimal digits MUST be in lowercase (RFC 5952 4.3)
+             else Just $ SixteenBits $ T.toLower t'
+        else Nothing
     else Nothing

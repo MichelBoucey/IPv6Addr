@@ -4,23 +4,28 @@
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address's text representation. Main features are validation against RFC 4291 and canonization in conformation with RFC 5952.
+-- Dealing with IPv6 address's text representation.
+-- Main features are validation against RFC 4291 and canonization
+-- in conformation with RFC 5952.
 
-module Text.IPv6Addr.Utils (
-    sixteenBitsArbitraryToken,
-    macAddrToIPv6AddrTokens,
-    getIPv6AddrOf, 
-    getTokIPv6AddrOf,
-    getTokMacAddrOf
-) where
+module Text.IPv6Addr.Utils
+    (
+      sixteenBitsArbitraryToken
+    , macAddrToIPv6AddrTokens
+    , getIPv6AddrOf
+    , getTokIPv6AddrOf
+    , getTokMacAddrOf
+    ) where
 
 import Control.Monad (replicateM)
 import Data.Char (intToDigit,isHexDigit)
 import Data.List (intersperse)
 import Data.Maybe (catMaybes,fromJust)
 import qualified Data.Text as T
-import Network.Info
 import System.Random (randomRIO)
+
+import Network.Info
+
 import Text.IPv6Addr
 import Text.IPv6Addr.Internals
 
@@ -30,18 +35,18 @@ sixteenBitsArbitraryToken m = do
     cs <- mapM getHex m
     return $ sixteenBits $ T.pack cs
 
-    where getHex c =
-              case c of
-                  '_' -> hexRand
-                  otherwise -> return c
-
-              where hexRand = do r <- randomRIO(0,15)
-                                 return $ intToDigit r
+  where getHex c =
+            case c of
+                '_' -> hexRand
+                otherwise -> return c
+          where hexRand = do
+                    r <- randomRIO(0,15)
+                    return $ intToDigit r
 
 ipv6AddrRand :: IO (Maybe IPv6Addr)
-ipv6AddrRand =
-    do l <- replicateM 8 (sixteenBitsArbitraryToken "____")
-       return $ ipv6TokensToText $ intersperse Colon $ catMaybes l
+ipv6AddrRand = do
+    l <- replicateM 8 (sixteenBitsArbitraryToken "____")
+    return $ ipv6TokensToText $ intersperse Colon $ catMaybes l
 
 -- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
 --
@@ -49,18 +54,18 @@ ipv6AddrRand =
 --
 macAddrToIPv6AddrTokens :: T.Text -> [IPv6AddrToken]
 macAddrToIPv6AddrTokens mac =
-      if T.length mac == 17 then do
-           let p = snd $ trans (T.split (==':') mac,[])
-           if length p == 3 then
-                  intersperse Colon $ map (fromJust . maybeIPv6AddrToken) p
-               else []
-           else []
-
-       where
-
-           trans ([],l) = ([],l)
-           trans (l1,l2) = do let s = splitAt 2 l1
-                              trans (snd s,l2 ++ [T.concat $ fst s]) 
+    if T.length mac == 17
+    then do
+        let p = snd $ trans (T.split (==':') mac,[])
+        if length p == 3
+        then intersperse Colon $ map (fromJust . maybeIPv6AddrToken) p
+        else []
+    else []
+  where
+    trans ([],l) = ([],l)
+    trans (l1,l2) = do
+        let s = splitAt 2 l1
+        trans (snd s,l2 ++ [T.concat $ fst s]) 
 
 --
 -- Functions based upon Network.Info to get local MAC and IPv6 adresses.
@@ -70,17 +75,16 @@ networkInterfacesIPv6AddrList :: IO [(String,IPv6)]
 networkInterfacesIPv6AddrList = do
     n <- getNetworkInterfaces
     return $ map networkInterfacesIPv6Addr n 
-
-    where networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)
+  where networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)
 
 networkInterfacesMacAddrList :: IO [(String,MAC)]
 networkInterfacesMacAddrList = do
     n <- getNetworkInterfaces
     return $ map networkInterfacesMac n 
+  where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
 
-    where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
-
--- | Given a valid name of a local network interface, e.g. getIPv6AddrOf \"eth0\", return Just the interface's IPv6 address.
+-- | Given a valid name of a local network interface, e.g. getIPv6AddrOf
+-- \"eth0\", return Just the interface's IPv6 address.
 getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
 getIPv6AddrOf s = do
      l <- networkInterfacesIPv6AddrList
@@ -88,7 +92,8 @@ getIPv6AddrOf s = do
          Just a -> return $ maybeIPv6Addr $ T.pack $ show a
          Nothing -> return Nothing
 
--- | Given a valid name of a local network interface, returns Just the list of tokens of the interface's IPv6 address.
+-- | Given a valid name of a local network interface, returns Just the list of
+-- tokens of the interface's IPv6 address.
 getTokIPv6AddrOf :: String -> IO (Maybe [IPv6AddrToken])
 getTokIPv6AddrOf s = do
      l <- networkInterfacesIPv6AddrList
@@ -96,7 +101,8 @@ getTokIPv6AddrOf s = do
          Just a -> return $ maybeTokIPv6Addr $ T.pack $ show a
          Nothing -> return Nothing
 
--- | Given the valid name of a local network interface, returns the corresponding list of 'IPv6AddrToken' of the interface's MAC Address.
+-- | Given the valid name of a local network interface,
+-- returns the corresponding list of 'IPv6AddrToken' of the interface's MAC Address.
 getTokMacAddrOf :: String -> IO (Maybe [IPv6AddrToken])
 getTokMacAddrOf s = do
     l <- networkInterfacesMacAddrList
