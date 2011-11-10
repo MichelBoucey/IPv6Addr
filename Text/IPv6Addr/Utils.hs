@@ -58,8 +58,8 @@ macAddrToIPv6AddrTokens mac =
     then do
         let p = snd $ trans (T.split (==':') mac,[])
         if length p == 3
-        then intersperse Colon $ map (fromJust . maybeIPv6AddrToken) p
-        else []
+           then intersperse Colon $ map (fromJust . maybeIPv6AddrToken) p
+           else []
     else []
   where
     trans ([],l) = ([],l)

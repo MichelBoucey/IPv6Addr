@@ -47,9 +47,9 @@ maybeIPv6Addr t = maybeTokIPv6Addr t >>= ipv6TokensToText
 
 -- | Returns Just an expanded IPv6 address, or Nothing.
 maybeFullIPv6Addr :: T.Text -> Maybe IPv6Addr
-maybeFullIPv6Addr t = 
-    do a <- maybeTokIPv6Addr t
-       ipv6TokensToText $ expandTokens $ fromDoubleColon a
+maybeFullIPv6Addr t = do
+    a <- maybeTokIPv6Addr t
+    ipv6TokensToText $ expandTokens $ fromDoubleColon a
 
 expandTokens :: [IPv6AddrToken] -> [IPv6AddrToken]
 expandTokens =
@@ -58,8 +58,8 @@ expandTokens =
         expTok (SixteenBits s) = do
             let ls = T.length s
             if ls < 4
-            then SixteenBits (T.replicate (4 - ls) tok0 `T.append` s)
-            else SixteenBits s
+               then SixteenBits (T.replicate (4 - ls) tok0 `T.append` s)
+               else SixteenBits s
         expTok t = t
 
 -- | Returns Just one of the valid 'IPv6AddrToken', or Nothing.
@@ -136,12 +136,12 @@ maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokIPv6Addr t = 
     do ltks <- maybeIPv6AddrTokens t
        if isIPv6Addr ltks
-       then Just $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks
-       else Nothing
+          then Just $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks
+          else Nothing
      where ipv4AddrReplacement ltks' =
                if ipv4AddrRewrite ltks'
-               then init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks')
-               else ltks'
+                  then init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks')
+                  else ltks'
 
 -- | An embedded IPv4 address have to be rewritten to output a pure IPv6 Address
 -- text representation in hexadecimal digits. But some well-known prefixed IPv6
@@ -182,8 +182,9 @@ ipv4AddrToIPv6AddrTokens t =
     case t of
         IPv4Addr a -> do
             let m = toHex a
-            [fromJust $ sixteenBits ((!!) m 0 `T.append` addZero ((!!) m 1)),Colon,
-             fromJust $ sixteenBits ((!!) m 2 `T.append` addZero ((!!) m 3))]
+            [fromJust $ sixteenBits ((!!) m 0 `T.append` addZero ((!!) m 1))
+             ,Colon
+             ,fromJust $ sixteenBits ((!!) m 2 `T.append` addZero ((!!) m 3))]
         otherwise -> []
       where toHex a = map (\x -> T.pack $ showIntAtBase 16 intToDigit (read (T.unpack x)::Int) "") $ T.split (=='.') a
             addZero d = if T.length d == 1 then tok0 `T.append` d else d
@@ -230,7 +231,7 @@ toDoubleColon tks =
       where
         helper h =
             if head h == AllZeros
-            then (True,lh)
-            else (False,lh)
+               then (True,lh)
+               else (False,lh)
           where lh = length h
         groupZerosRuns = group . filter (/= Colon)
