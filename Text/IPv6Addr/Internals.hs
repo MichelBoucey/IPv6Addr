@@ -76,10 +76,14 @@ ipv4Addr t = do
        then Just (IPv4Addr t) else Nothing
 
 colon :: T.Text -> Maybe IPv6AddrToken
-colon t = if t == tokcolon then Just Colon else Nothing
+colon t = if t == tokcolon
+             then Just Colon
+             else Nothing
 
 doubleColon :: T.Text -> Maybe IPv6AddrToken
-doubleColon t = if t == tokdcolon then Just DoubleColon else Nothing
+doubleColon t = if t == tokdcolon
+                   then Just DoubleColon
+                   else Nothing
 
 -- | Returns a SixteenBits token.
 sixteenBits:: T.Text -> Maybe IPv6AddrToken

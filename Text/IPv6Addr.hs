@@ -16,7 +16,9 @@ module Text.IPv6Addr
     -- * Validating and canonizing an IPv6 Address
     , isIPv6Addr
     , maybeIPv6Addr
+    , maybePureIPv6Addr
     , maybeTokIPv6Addr
+    , maybeTokPureIPv6Addr
     , maybeFullIPv6Addr
     -- * Manipulating IPv6 address tokens
     -- ** To IPv6 Address token(s)
@@ -38,17 +40,22 @@ import Numeric (showIntAtBase)
 
 import Text.IPv6Addr.Internals
 
--- | Returns Just an 'IPv6Addr', or Nothing.
+-- | Returns Just the text representation of an 'IPv6Addr' validated against
+-- RFC 4291 and canonized in conformation with RFC 5952, or Nothing.
 --
 -- > maybeIPv6Addr "D045::00Da:0fA9:0:0:230.34.110.80" == Just "d045:0:da:fa9::e622:6e50"
 --
 maybeIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybeIPv6Addr t = maybeTokIPv6Addr t >>= ipv6TokensToText
 
--- | Returns Just an expanded IPv6 address, or Nothing.
+-- | Returns Just a pure 'IPv6Addr', or Nothing.
+maybePureIPv6Addr :: T.Text -> Maybe IPv6Addr
+maybePureIPv6Addr t = maybeTokPureIPv6Addr t >>= ipv6TokensToText
+
+-- | Returns Just a pure and expanded IPv6 address, or Nothing.
 maybeFullIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybeFullIPv6Addr t = do
-    a <- maybeTokIPv6Addr t
+    a <- maybeTokPureIPv6Addr t
     ipv6TokensToText $ expandTokens $ fromDoubleColon a
 
 expandTokens :: [IPv6AddrToken] -> [IPv6AddrToken]
@@ -131,7 +138,7 @@ maybeIPv6AddrTokens t = mapM maybeIPv6AddrToken $ tokenizeBy ':' t
 
 -- | This is the main function which returns Just the list of a tokenized IPv6
 -- address's text representation validated against RFC 4291 and canonized
---  conformation with RFC 5952, or Nothing.
+-- conformation with RFC 5952, or Nothing.
 maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokIPv6Addr t = 
     do ltks <- maybeIPv6AddrTokens t
@@ -142,6 +149,17 @@ maybeTokIPv6Addr t =
                if ipv4AddrRewrite ltks'
                   then init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks')
                   else ltks'
+
+-- | Returns Just the list of tokenized pure IPv6 address, always rewriting an
+-- embedded IPv4 address if present.
+maybeTokPureIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
+maybeTokPureIPv6Addr t =
+    do ltks <- maybeIPv6AddrTokens t
+       if isIPv6Addr ltks
+          then Just $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks
+          else Nothing
+     where ipv4AddrReplacement ltks' =
+               init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks')
 
 -- | An embedded IPv4 address have to be rewritten to output a pure IPv6 Address
 -- text representation in hexadecimal digits. But some well-known prefixed IPv6
