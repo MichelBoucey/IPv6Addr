@@ -38,6 +38,7 @@ import qualified Data.Text as T
 import Data.Text.Read (decimal)
 import Numeric (showIntAtBase)
 
+import Text.IPv6Addr.Types
 import Text.IPv6Addr.Internals
 
 -- | Returns Just the text representation of an 'IPv6Addr' validated against
