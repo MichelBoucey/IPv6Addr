@@ -139,7 +139,7 @@ maybeIPv6AddrTokens t = mapM maybeIPv6AddrToken $ tokenizeBy ':' t
 
 -- | This is the main function which returns Just the list of a tokenized IPv6
 -- address's text representation validated against RFC 4291 and canonized
--- conformation with RFC 5952, or Nothing.
+-- in conformation with RFC 5952, or Nothing.
 maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokIPv6Addr t = 
     do ltks <- maybeIPv6AddrTokens t

@@ -1,4 +1,5 @@
--- | -- Module      :  Text.IPv6Addr
+-- |
+-- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
@@ -10,7 +11,7 @@
 
 module Text.IPv6Addr.Utils
     (
-      sixteenBitsArbitraryToken
+      sixteenBitsArbToken
     , macAddrToIPv6AddrTokens
     , getIPv6AddrOf
     , getTokIPv6AddrOf
@@ -29,12 +30,15 @@ import Network.Info
 import Text.IPv6Addr
 import Text.IPv6Addr.Internals
 
--- | Returns an arbitrary 'SixteenBits' token based on a mask \"____\"
-sixteenBitsArbitraryToken :: [Char] -> IO (Maybe IPv6AddrToken)
-sixteenBitsArbitraryToken m = do
+-- | Returns an arbitrary 'SixteenBits' token based on a mask \"____\", each
+-- underscore being replaced by a random hexadecimal digit.
+--
+-- > sixteenBitsArbToken "_f__" == Just (SixteenBits "bfd4")
+-- 
+sixteenBitsArbToken :: String -> IO (Maybe IPv6AddrToken)
+sixteenBitsArbToken m = do
     cs <- mapM getHex m
     return $ sixteenBits $ T.pack cs
-
   where getHex c =
             case c of
                 '_' -> hexRand
@@ -45,7 +49,7 @@ sixteenBitsArbitraryToken m = do
 
 ipv6AddrRand :: IO (Maybe IPv6Addr)
 ipv6AddrRand = do
-    l <- replicateM 8 (sixteenBitsArbitraryToken "____")
+    l <- replicateM 8 (sixteenBitsArbToken "____")
     return $ ipv6TokensToText $ intersperse Colon $ catMaybes l
 
 -- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
@@ -84,7 +88,7 @@ networkInterfacesMacAddrList = do
   where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
 
 -- | Given a valid name of a local network interface, e.g. getIPv6AddrOf
--- \"eth0\", return Just the interface's IPv6 address.
+-- \"eth0\", returns Just the interface's IPv6 address.
 getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
 getIPv6AddrOf s = do
      l <- networkInterfacesIPv6AddrList

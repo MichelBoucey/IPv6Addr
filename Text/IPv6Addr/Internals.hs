@@ -19,7 +19,6 @@ import Data.Text.Read (decimal)
 
 import Text.IPv6Addr.Types
 
--- | Some useful tokens
 tokdot = T.pack "."
 tokcolon = T.pack ":"
 tokdcolon = T.pack "::"
@@ -73,7 +72,6 @@ doubleColon t = if t == tokdcolon
                    then Just DoubleColon
                    else Nothing
 
--- | Returns a SixteenBits token.
 sixteenBits:: T.Text -> Maybe IPv6AddrToken
 sixteenBits t =
     if T.length t < 5
