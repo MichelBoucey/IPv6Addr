@@ -192,7 +192,7 @@ ipv4AddrRewrite tks =
         otherwise -> False
 
 -- | Rewrites Just an embedded 'IPv4Addr' into the corresponding list of pure
--- IPv6Addr tokens, or returns an empty list.
+-- IPv6Addr tokens.
 --
 -- > ipv4AddrToIPv6AddrTokens (IPv4Addr "127.0.0.1") == [SixteenBits "7f0",Colon,SixteenBits "1"]
 --
@@ -204,7 +204,7 @@ ipv4AddrToIPv6AddrTokens t =
             [fromJust $ sixteenBits ((!!) m 0 `T.append` addZero ((!!) m 1))
              ,Colon
              ,fromJust $ sixteenBits ((!!) m 2 `T.append` addZero ((!!) m 3))]
-        otherwise -> []
+        _ -> [t]
       where toHex a = map (\x -> T.pack $ showIntAtBase 16 intToDigit (read (T.unpack x)::Int) "") $ T.split (=='.') a
             addZero d = if T.length d == 1 then tok0 `T.append` d else d
 
