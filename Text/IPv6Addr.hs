@@ -144,7 +144,8 @@ maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokIPv6Addr t = 
     do ltks <- maybeIPv6AddrTokens t
        if isIPv6Addr ltks
-          then Just $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks
+          -- then Just $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks
+          then Just $ (ipv4AddrReplacement . toDoubleColon . fromDoubleColon) ltks
           else Nothing
      where ipv4AddrReplacement ltks' =
                if ipv4AddrRewrite ltks'
@@ -182,13 +183,13 @@ ipv4AddrRewrite tks =
     case last tks of
         IPv4Addr _ -> do
             let itks = init tks
-            (itks == [DoubleColon]
-             || itks == [DoubleColon,SixteenBits tokffff,Colon]
-             || itks == [DoubleColon,SixteenBits tokffff,Colon,AllZeros,Colon]
-             || itks == [SixteenBits tok64,Colon,SixteenBits tokff9b,DoubleColon]
-             || [SixteenBits tok200,Colon,SixteenBits tok5efe,Colon] `isSuffixOf` itks
-             || [AllZeros,Colon,SixteenBits tok5efe,Colon] `isSuffixOf` itks
-             || [DoubleColon,SixteenBits tok5efe,Colon] `isSuffixOf` itks)
+            not (itks == [DoubleColon]
+                 || itks == [DoubleColon,SixteenBits tokffff,Colon]
+                 || itks == [DoubleColon,SixteenBits tokffff,Colon,AllZeros,Colon]
+                 || itks == [SixteenBits tok64,Colon,SixteenBits tokff9b,DoubleColon]
+                 || [SixteenBits tok200,Colon,SixteenBits tok5efe,Colon] `isSuffixOf` itks
+                 || [AllZeros,Colon,SixteenBits tok5efe,Colon] `isSuffixOf` itks
+                 || [DoubleColon,SixteenBits tok5efe,Colon] `isSuffixOf` itks)
         otherwise -> False
 
 -- | Rewrites Just an embedded 'IPv4Addr' into the corresponding list of pure
