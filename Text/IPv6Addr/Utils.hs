@@ -29,6 +29,7 @@ import Network.Info
 
 import Text.IPv6Addr
 import Text.IPv6Addr.Internals
+import Text.IPv6Addr.Types
 
 -- | Returns an arbitrary 'SixteenBits' token based on a mask \"____\", each
 -- underscore being replaced by a random hexadecimal digit.
@@ -75,26 +76,11 @@ macAddrToIPv6AddrTokens mac =
 -- Functions based upon Network.Info to get local MAC and IPv6 adresses.
 --
 
-networkInterfacesIPv6AddrList :: IO [(String,IPv6)]
-networkInterfacesIPv6AddrList = do
-    n <- getNetworkInterfaces
-    return $ map networkInterfacesIPv6Addr n 
-  where networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)
-
 networkInterfacesMacAddrList :: IO [(String,MAC)]
 networkInterfacesMacAddrList = do
     n <- getNetworkInterfaces
     return $ map networkInterfacesMac n 
   where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
-
--- | Given a valid name of a local network interface, e.g. getIPv6AddrOf
--- \"eth0\", returns Just the interface's IPv6 address.
-getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
-getIPv6AddrOf s = do
-     l <- networkInterfacesIPv6AddrList
-     case lookup s l of
-         Just a -> return $ maybeIPv6Addr $ T.pack $ show a
-         Nothing -> return Nothing
 
 -- | Given a valid name of a local network interface, returns Just the list of
 -- tokens of the interface's IPv6 address.

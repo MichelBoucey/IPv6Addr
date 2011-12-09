@@ -17,6 +17,8 @@ import Data.Maybe (isJust)
 import qualified Data.Text as T
 import Data.Text.Read (decimal)
 
+import Network.Info
+
 import Text.IPv6Addr.Types
 
 tokdot = T.pack "."
@@ -85,3 +87,9 @@ sixteenBits t =
                        else Just $ SixteenBits $ T.toLower t'
                else Nothing
        else Nothing
+
+networkInterfacesIPv6AddrList :: IO [(String,IPv6)]
+networkInterfacesIPv6AddrList = do
+    n <- getNetworkInterfaces
+    return $ map networkInterfacesIPv6Addr n
+  where networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)

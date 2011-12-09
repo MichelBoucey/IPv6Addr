@@ -1,6 +1,6 @@
 -- | 
 -- Module      :  Text.IPv6Addr
--- Copyright   :  (c) Michel Boucey 2011
+-- Copyright   :  (c) Michel Boucey 2011-2012
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
@@ -12,10 +12,10 @@
 module Text.IPv6Addr
     (
       IPv6Addr
-    , IPv6AddrToken(..)
     -- * Validating and canonizing an IPv6 Address
     , isIPv6Addr
     , maybeIPv6Addr
+    , getIPv6AddrOf
     , maybePureIPv6Addr
     , maybeTokIPv6Addr
     , maybeTokPureIPv6Addr
@@ -255,3 +255,12 @@ toDoubleColon tks =
                else (False,lh)
           where lh = length h
         groupZerosRuns = group . filter (/= Colon)
+
+-- | Given a valid name of a local network interface, e.g. getIPv6AddrOf
+-- \"eth0\", returns Just the interface's IPv6 address.
+getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
+getIPv6AddrOf s = do
+     l <- networkInterfacesIPv6AddrList
+     case lookup s l of
+         Just a -> return $ maybeIPv6Addr $ T.pack $ show a
+         Nothing -> return Nothing
