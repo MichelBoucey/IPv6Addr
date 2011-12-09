@@ -1,19 +1,15 @@
 -- |
 -- Module      :  Text.IPv6Addr
--- Copyright   :  (c) Michel Boucey 2011
+-- Copyright   :  (c) Michel Boucey 2011-212
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address's text representation.
--- Main features are validation against RFC 4291 and canonization
--- in conformation with RFC 5952.
 
 module Text.IPv6Addr.Utils
     (
       sixteenBitsArbToken
     , macAddrToIPv6AddrTokens
-    , getIPv6AddrOf
     , getTokIPv6AddrOf
     , getTokMacAddrOf
     ) where
