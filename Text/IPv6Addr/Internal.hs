@@ -1,15 +1,13 @@
 -- | 
 -- Module      :  Text.IPv6Addr
--- Copyright   :  (c) Michel Boucey 2011
+-- Copyright   :  (c) Michel Boucey 2011-2012
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address's text representation.
--- Main features are validation against RFC 4291 and canonization
--- in conformation with RFC 5952.
+-- Dealing with IPv6 address text representation.
 
-module Text.IPv6Addr.Internals where
+module Text.IPv6Addr.Internal where
 
 import Data.Char (intToDigit,isDigit,isHexDigit,toLower)
 import Data.Function (on)
@@ -91,13 +89,6 @@ sixteenBits t =
                        else Just $ SixteenBits $ T.toLower t'
                else Nothing
        else Nothing
-
-networkInterfacesIPv6AddrList :: IO [(String,IPv6)]
-networkInterfacesIPv6AddrList = do
-    n <- getNetworkInterfaces
-    return $ map networkInterfacesIPv6Addr n
-  where networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)
-
 
 expandTokens :: [IPv6AddrToken] -> [IPv6AddrToken]
 expandTokens =
@@ -295,3 +286,9 @@ toDoubleColon tks =
                else (False,lh)
           where lh = length h
         groupZerosRuns = group . filter (/= Colon)
+
+networkInterfacesIPv6AddrList :: IO [(String,IPv6)]
+networkInterfacesIPv6AddrList = do
+    n <- getNetworkInterfaces
+    return $ map networkInterfacesIPv6Addr n
+  where networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)

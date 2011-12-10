@@ -10,6 +10,8 @@ module Text.IPv6Addr.Utils
     (
       sixteenBitsArbToken
     , macAddrToIPv6AddrTokens
+    , fromDoubleColon
+    , toDoubleColon
     , getTokIPv6AddrOf
     , getTokMacAddrOf
     ) where
@@ -24,7 +26,7 @@ import System.Random (randomRIO)
 import Network.Info
 
 import Text.IPv6Addr
-import Text.IPv6Addr.Internals
+import Text.IPv6Addr.Internal
 import Text.IPv6Addr.Types
 
 -- | Returns an arbitrary 'SixteenBits' token based on a mask \"____\", each

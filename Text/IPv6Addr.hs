@@ -5,17 +5,15 @@
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address's text representation.
--- Main features are validation against RFC 4291 and canonization
--- in conformation with RFC 5952.
+-- Dealing with IPv6 address text representation.
 
 module Text.IPv6Addr
     (
       IPv6Addr
     , maybeIPv6Addr
-    , getIPv6AddrOf
     , maybePureIPv6Addr
     , maybeFullIPv6Addr
+    , getIPv6AddrOf
     ) where
 
 import Control.Monad (replicateM)
@@ -27,27 +25,39 @@ import qualified Data.Text as T
 import Data.Text.Read (decimal)
 import Numeric (showIntAtBase)
 
+import Text.IPv6Addr.Internal
 import Text.IPv6Addr.Types
-import Text.IPv6Addr.Internals
 
--- | Returns Just the text representation of an 'IPv6Addr' validated against
--- RFC 4291 and canonized in conformation with RFC 5952, or Nothing.
+-- | Returns Just the text representation of a canonized
+-- 'IPv6Addr' in conformation with RFC 5952, or Nothing.
 --
--- > maybeIPv6Addr "D045::00Da:0fA9:0:0:230.34.110.80" == Just "d045:0:da:fa9::e622:6e50"
+-- > maybeIPv6Addr "0:0::FFFF:192.0.2.128" == Just "::ffff:192.0.2.128"
 --
 maybeIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybeIPv6Addr t = maybeTokIPv6Addr t >>= ipv6TokensToText
 
 -- | Returns Just a pure 'IPv6Addr', or Nothing.
+--
+-- > maybePureIPv6Addr "::ffff:192.0.2.128" == Just "::ffff:c000:280"
+--
 maybePureIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybePureIPv6Addr t = maybeTokPureIPv6Addr t >>= ipv6TokensToText
 
--- | Returns Just a pure and expanded IPv6 address, or Nothing.
+-- | Returns Just a pure and expanded 'IPv6Addr', or Nothing.
+--
+-- > maybeFullIPv6Addr "::ffff:192.0.2.128" == Just "0000:0000:0000:0000:0000:ffff:c000:0280"
+--
 maybeFullIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybeFullIPv6Addr t = do
     a <- maybeTokPureIPv6Addr t
     ipv6TokensToText $ expandTokens $ fromDoubleColon a
 
+
+-- | Returns Just the canonized 'IPv6Addr' of the given network interface,
+-- or Nothing.
+--
+-- > getIPv6AddrOf "eth0"
+--
 getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
 getIPv6AddrOf s = do
      l <- networkInterfacesIPv6AddrList
