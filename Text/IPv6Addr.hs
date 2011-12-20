@@ -52,7 +52,6 @@ maybeFullIPv6Addr t = do
     a <- maybeTokPureIPv6Addr t
     ipv6TokensToText $ expandTokens $ fromDoubleColon a
 
-
 -- | Returns Just the canonized 'IPv6Addr' of the given network interface,
 -- or Nothing.
 --
