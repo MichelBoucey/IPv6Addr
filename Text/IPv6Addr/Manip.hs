@@ -6,7 +6,7 @@
 -- Stability   :  provisional
 --
 
-module Text.IPv6Addr.Utils
+module Text.IPv6Addr.Manip
     (
       sixteenBitsArbToken
     , macAddrToIPv6AddrTokens

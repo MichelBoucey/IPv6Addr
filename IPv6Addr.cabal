@@ -7,7 +7,7 @@ author:		Michel Boucey <michel.boucey@gmail.com>
 maintainer:	Michel Boucey <michel.boucey@gmail.com>
 Bug-Reports:    mailto:michel.boucey@gmail.com
 synopsis:	Library to deal with IPv6 address text representation.
-description:	Library to deal with IPv6 addresse text representation.
+description:	Library to deal with IPv6 address text representation.
 category:	Network, Text
 stability:	provisional
 build-type:	Simple
@@ -24,4 +24,4 @@ Library
                  random
 
   exposed-modules: Text.IPv6Addr
-                   Text.IPv6Addr.Utils
+                   Text.IPv6Addr.Manip
