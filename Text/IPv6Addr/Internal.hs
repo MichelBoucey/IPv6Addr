@@ -7,19 +7,34 @@
 --
 -- Dealing with IPv6 address text representation.
 
-module Text.IPv6Addr.Internal where
-
-import Data.Char (intToDigit,isDigit,isHexDigit,toLower)
-import Data.Function (on)
-import qualified Data.Text as T
-import Data.Text.Read (decimal)
+module Text.IPv6Addr.Internal
+    (
+      colon
+    , doubleColon
+    , sixteenBits
+    , ipv4Addr
+    , expandTokens
+    , maybeIPv6AddrToken
+    , maybeIPv6AddrTokens
+    , ipv6TokensToText
+    , isIPv6Addr
+    , maybeTokIPv6Addr
+    , maybeTokPureIPv6Addr
+    , ipv4AddrToIPv6AddrTokens
+    , fromDoubleColon
+    , toDoubleColon
+    , networkInterfacesIPv6AddrList
+    ) where
 
 import Control.Monad (replicateM)
+import Data.Char (intToDigit,isDigit,isHexDigit,toLower)
+import Data.Function (on)
 import Data.List (group,isSuffixOf,elemIndex,elemIndices,intersperse)
+import qualified Data.Text as T
+import Data.Text.Read (decimal)
 import Data.Maybe (fromJust,isJust)
-import Numeric (showIntAtBase)
-
 import Network.Info
+import Numeric (showIntAtBase)
 
 import Text.IPv6Addr.Types
 

@@ -8,10 +8,9 @@
 
 module Text.IPv6Addr.Manip
     (
-      sixteenBitsArbToken
+      module Text.IPv6Addr.Internal
+    , sixteenBitsArbToken
     , macAddrToIPv6AddrTokens
-    , fromDoubleColon
-    , toDoubleColon
     , getTokIPv6AddrOf
     , getTokMacAddrOf
     ) where
