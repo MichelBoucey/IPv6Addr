@@ -27,14 +27,14 @@ module Text.IPv6Addr.Internal
     ) where
 
 import Control.Monad (replicateM)
-import Data.Char (intToDigit,isDigit,isHexDigit,toLower)
+import Data.Char (isDigit,isHexDigit,toLower)
 import Data.Function (on)
 import Data.List (group,isSuffixOf,elemIndex,elemIndices,intersperse)
+import Numeric (showHex)
 import qualified Data.Text as T
 import Data.Text.Read (decimal)
 import Data.Maybe (fromJust,isJust)
 import Network.Info
-import Numeric (showIntAtBase)
 
 import Text.IPv6Addr.Types
 
@@ -173,8 +173,8 @@ isIPv6Addr tks =
                         otherwise -> False
                 countDoubleColon l = length $ elemIndices DoubleColon l
 
-countIPv4Addr tks =
-     foldr oneMoreIPv4Addr 0 tks
+countIPv4Addr =
+     foldr oneMoreIPv4Addr 0
    where oneMoreIPv4Addr t c = case t of
                                    IPv4Addr _ -> c + 1
                                    otherwise -> c
@@ -252,7 +252,7 @@ ipv4AddrToIPv6AddrTokens t =
              ,Colon
              ,fromJust $ sixteenBits ((!!) m 2 `T.append` addZero ((!!) m 3))]
         _ -> [t]
-      where toHex a = map (\x -> T.pack $ showIntAtBase 16 intToDigit (read (T.unpack x)::Int) "") $ T.split (=='.') a
+      where toHex a = map (\x -> T.pack $ showHex (read (T.unpack x)::Int) "") $ T.split (=='.') a
             addZero d = if T.length d == 1 then tok0 `T.append` d else d
 
 fromDoubleColon :: [IPv6AddrToken] -> [IPv6AddrToken]
@@ -296,9 +296,7 @@ toDoubleColon tks =
         map helper $ groupZerosRuns x
       where
         helper h =
-            if head h == AllZeros
-               then (True,lh)
-               else (False,lh)
+            (head h == AllZeros, lh)
           where lh = length h
         groupZerosRuns = group . filter (/= Colon)
 
