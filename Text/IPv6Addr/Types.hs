@@ -1,12 +1,15 @@
--- | -- Module      :  Text.IPv6Addr
+--------------------------------------------------------------------------------
+-- |
+-- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address's text representation.
--- Main features are validation against RFC 4291 and canonization
--- in conformation with RFC 5952.
+-- Dealing with IPv6 address's text representation,
+-- canonization and manipulations.
+--
+--------------------------------------------------------------------------------
 
 module Text.IPv6Addr.Types where
 
