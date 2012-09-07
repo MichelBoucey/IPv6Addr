@@ -59,7 +59,7 @@ tokenizeBy :: Char -> T.Text -> [T.Text]
 tokenizeBy c = T.groupBy ((==) `on` (== c))
 
 --
--- Validation of IPv6 adress tokens
+-- Validation of IPv6 address tokens
 --
 
 dot :: T.Text -> Maybe IPv4AddrToken
@@ -140,8 +140,8 @@ ipv6TokenToText AllZeros = tok0
 ipv6TokenToText (IPv4Addr a) = a
 
 -- | Given an arbitrary list of 'IPv6AddrToken', returns the corresponding 'Text'.
-ipv6TokensToText :: [IPv6AddrToken] -> Maybe T.Text
-ipv6TokensToText l = Just $ T.concat $ map ipv6TokenToText l
+ipv6TokensToText :: [IPv6AddrToken] -> T.Text
+ipv6TokensToText l = T.concat $ map ipv6TokenToText l
 
 -- | Returns True if a list of 'IPv6AddrToken' constitutes a valid IPv6 Address.
 isIPv6Addr :: [IPv6AddrToken] -> Bool
@@ -194,7 +194,6 @@ maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokIPv6Addr t = 
     do ltks <- maybeIPv6AddrTokens t
        if isIPv6Addr ltks
-          -- then Just $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks
           then Just $ (ipv4AddrReplacement . toDoubleColon . fromDoubleColon) ltks
           else Nothing
      where ipv4AddrReplacement ltks' =

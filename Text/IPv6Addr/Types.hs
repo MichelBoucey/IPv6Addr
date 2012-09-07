@@ -15,7 +15,7 @@ module Text.IPv6Addr.Types where
 
 import qualified Data.Text as T
 
-type IPv6Addr = T.Text
+data IPv6Addr = IPv6Addr T.Text deriving (Eq,Show)
 
 data IPv6AddrToken
     = SixteenBits T.Text -- ^ A four hexadecimal digits group representing a 16-Bit chunk

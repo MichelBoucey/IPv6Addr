@@ -75,7 +75,7 @@ macAddrToIPv6AddrTokens mac =
         trans (snd s,l2 ++ [T.concat $ fst s]) 
 
 --
--- Functions based upon Network.Info to get local MAC and IPv6 adresses.
+-- Functions based upon Network.Info to get local MAC and IPv6 addresses.
 --
 
 networkInterfacesMacAddrList :: IO [(String,MAC)]
