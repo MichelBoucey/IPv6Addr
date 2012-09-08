@@ -1,4 +1,4 @@
---------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 -- | 
 -- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011-2012
@@ -9,7 +9,7 @@
 -- Dealing with IPv6 address text representation,
 -- canonization and manipulations.
 --
---------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 
 module Text.IPv6Addr.Internal
     (
@@ -55,16 +55,29 @@ tokfe80 = T.pack "fe80"
 tok5efe = T.pack "5efe"
 tok200 = T.pack "200"
 
-tokenizeBy :: Char -> T.Text -> [T.Text]
-tokenizeBy c = T.groupBy ((==) `on` (== c))
+tokenizedBy :: Char -> T.Text -> [T.Text]
+tokenizedBy c = T.groupBy ((==) `on` (== c))
 
 --
 -- Validation of IPv6 address tokens
 --
 
 dot :: T.Text -> Maybe IPv4AddrToken
-dot s = if s == tokdot then Just Dot else Nothing
+dot t
+    | t == tokdot = Just Dot
+    | otherwise   = Nothing
 
+colon :: T.Text -> Maybe IPv6AddrToken
+colon t
+    | t == tokcolon = Just Colon
+    | otherwise     = Nothing
+
+doubleColon :: T.Text -> Maybe IPv6AddrToken
+doubleColon t
+    | t == tokdcolon = Just DoubleColon
+    | otherwise      = Nothing
+
+sixteenBits:: T.Text -> Maybe IPv6AddrToken
 eightBitsToken :: T.Text -> Maybe IPv4AddrToken
 eightBitsToken t =
     case decimal t of
@@ -81,21 +94,10 @@ ipv4Token t
 
 ipv4Addr :: T.Text -> Maybe IPv6AddrToken
 ipv4Addr t = do
-    let r = map ipv4Token $ tokenizeBy '.' t
+    let r = map ipv4Token $ tokenizedBy '.' t
     if (Nothing `notElem` r) && (length r == 7)
        then Just (IPv4Addr t) else Nothing
 
-colon :: T.Text -> Maybe IPv6AddrToken
-colon t = if t == tokcolon
-             then Just Colon
-             else Nothing
-
-doubleColon :: T.Text -> Maybe IPv6AddrToken
-doubleColon t = if t == tokdcolon
-                   then Just DoubleColon
-                   else Nothing
-
-sixteenBits:: T.Text -> Maybe IPv6AddrToken
 sixteenBits t =
     if T.length t < 5
        then do
@@ -185,7 +187,7 @@ countIPv4Addr =
 
 -- | Returns Just a list of 'IPv6AddrToken', or Nothing.
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
-maybeIPv6AddrTokens t = mapM maybeIPv6AddrToken $ tokenizeBy ':' t
+maybeIPv6AddrTokens t = mapM maybeIPv6AddrToken $ tokenizedBy ':' t
 
 -- | This is the main function which returns Just the list of a tokenized IPv6
 -- address's text representation validated against RFC 4291 and canonized

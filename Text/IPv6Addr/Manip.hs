@@ -1,4 +1,4 @@
---------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 -- |
 -- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011-212
@@ -9,7 +9,7 @@
 -- Dealing with IPv6 address's text representation,
 -- canonization and manipulations.
 --
---------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 
 module Text.IPv6Addr.Manip
     (
@@ -29,7 +29,6 @@ import System.Random (randomRIO)
 
 import Network.Info
 
-import Text.IPv6Addr
 import Text.IPv6Addr.Internal
 import Text.IPv6Addr.Types
 
@@ -49,12 +48,12 @@ sixteenBitsArbToken m = do
           where hexRand = do
                     r <- randomRIO(0,15)
                     return $ intToDigit r
-
+{-
 ipv6AddrRand :: IO (Maybe IPv6Addr)
 ipv6AddrRand = do
     l <- replicateM 8 (sixteenBitsArbToken "____")
-    return $ ipv6TokensToText $ intersperse Colon $ catMaybes l
-
+    return $ ipv6TokensToIPv6Addr $ intersperse Colon $ catMaybes l
+-}
 -- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
 --
 -- > macAddrToIPv6AddrTokens "fa:1d:58:cc:95:16" == [SixteenBits "fa1d",Colon,SixteenBits "58cc",Colon,SixteenBits "9516"]

@@ -1,4 +1,4 @@
---------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 -- | 
 -- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011-2012
@@ -9,7 +9,7 @@
 -- Dealing with IPv6 address text representation,
 -- canonization and manipulations.
 --
---------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 
 module Text.IPv6Addr
     (
@@ -17,21 +17,22 @@ module Text.IPv6Addr
     , maybeIPv6Addr
     , maybePureIPv6Addr
     , maybeFullIPv6Addr
-    --, getIPv6AddrOf
+    , getIPv6AddrOf
+    , randIPv6Addr
     ) where
 
 import Control.Monad (replicateM)
 import Data.Char (intToDigit,isDigit,isHexDigit,toLower)
 import Data.Function (on)
 import Data.List (group,isSuffixOf,elemIndex,elemIndices,intersperse)
-import Data.Maybe (fromJust,isJust)
+import Data.Maybe (catMaybes,fromJust,isJust)
 import qualified Data.Text as T
 import Data.Text.Read (decimal)
 import Numeric (showIntAtBase)
 
 import Text.IPv6Addr.Internal
+import Text.IPv6Addr.Manip (sixteenBitsArbToken)
 import Text.IPv6Addr.Types
-
 
 -- | Returns Just the text representation of a canonized
 -- 'IPv6Addr' in conformation with RFC 5952, or Nothing.
@@ -69,4 +70,11 @@ getIPv6AddrOf s = do
          Just a -> return $ maybeIPv6Addr $ T.pack $ show a
          Nothing -> return Nothing
 
+-- | Returns a full random 'IPv6Addr'
+randIPv6Addr :: IO IPv6Addr
+randIPv6Addr = do
+    l <- replicateM 8 (sixteenBitsArbToken "____")
+    return $ fromJust $ ipv6TokensToIPv6Addr $ intersperse Colon $ catMaybes l
+
+ipv6TokensToIPv6Addr :: [IPv6AddrToken] -> Maybe IPv6Addr
 ipv6TokensToIPv6Addr l = Just $ IPv6Addr $ ipv6TokensToText l

@@ -1,7 +1,7 @@
---------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 -- |
 -- Module      :  Text.IPv6Addr
--- Copyright   :  (c) Michel Boucey 2011
+-- Copyright   :  (c) Michel Boucey 2011-2012
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
@@ -9,11 +9,13 @@
 -- Dealing with IPv6 address's text representation,
 -- canonization and manipulations.
 --
---------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 
 module Text.IPv6Addr.Types where
 
 import qualified Data.Text as T
+
+data IPv4AddrToken = Dot | EightBits T.Text deriving (Eq,Show)
 
 data IPv6Addr = IPv6Addr T.Text deriving (Eq,Show)
 
@@ -24,7 +26,3 @@ data IPv6AddrToken
     | DoubleColon        -- ^ A double-colon stands for a unique compression of many consecutive 16-Bit chunks
     | IPv4Addr T.Text    -- ^ An embedded IPv4 address as representation of the last 32-Bit
     deriving (Eq,Show)
-
-data IPv4AddrToken
-    = Dot
-    | EightBits T.Text deriving (Eq,Show)
