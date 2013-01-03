@@ -1,7 +1,7 @@
 -- -----------------------------------------------------------------------------
 -- |
 -- Module      :  Text.IPv6Addr
--- Copyright   :  (c) Michel Boucey 2011-212
+-- Copyright   :  (c) Michel Boucey 2011-2013
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
@@ -38,22 +38,14 @@ import Text.IPv6Addr.Types
 -- > sixteenBitsArbToken "_f__" == Just (SixteenBits "bfd4")
 -- 
 sixteenBitsArbToken :: String -> IO (Maybe IPv6AddrToken)
-sixteenBitsArbToken m = do
-    cs <- mapM getHex m
-    return $ sixteenBits $ T.pack cs
+sixteenBitsArbToken m =
+    mapM getHex m >>= \cs -> return $ sixteenBits $ T.pack cs
   where getHex c =
             case c of
                 '_' -> hexRand
                 otherwise -> return c
-          where hexRand = do
-                    r <- randomRIO(0,15)
-                    return $ intToDigit r
-{-
-ipv6AddrRand :: IO (Maybe IPv6Addr)
-ipv6AddrRand = do
-    l <- replicateM 8 (sixteenBitsArbToken "____")
-    return $ ipv6TokensToIPv6Addr $ intersperse Colon $ catMaybes l
--}
+          where hexRand = randomRIO(0,15) >>= \r -> return $ intToDigit r
+
 -- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
 --
 -- > macAddrToIPv6AddrTokens "fa:1d:58:cc:95:16" == [SixteenBits "fa1d",Colon,SixteenBits "58cc",Colon,SixteenBits "9516"]

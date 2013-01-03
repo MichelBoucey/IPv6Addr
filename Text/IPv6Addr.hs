@@ -1,7 +1,7 @@
 -- -----------------------------------------------------------------------------
 -- | 
 -- Module      :  Text.IPv6Addr
--- Copyright   :  (c) Michel Boucey 2011-2012
+-- Copyright   :  (c) Michel Boucey 2011-2013
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
@@ -54,9 +54,8 @@ maybePureIPv6Addr t = maybeTokPureIPv6Addr t >>= ipv6TokensToIPv6Addr
 -- > maybeFullIPv6Addr "::ffff:192.0.2.128" == Just "0000:0000:0000:0000:0000:ffff:c000:0280"
 --
 maybeFullIPv6Addr :: T.Text -> Maybe IPv6Addr
-maybeFullIPv6Addr t = do
-    a <- maybeTokPureIPv6Addr t
-    ipv6TokensToIPv6Addr $ expandTokens $ fromDoubleColon a
+maybeFullIPv6Addr t =
+   maybeTokPureIPv6Addr t >>= \m -> ipv6TokensToIPv6Addr $ expandTokens $ fromDoubleColon m
 
 -- | Returns Just the canonized 'IPv6Addr' of the given network interface,
 -- or Nothing.
@@ -73,7 +72,7 @@ getIPv6AddrOf s = do
 -- | Returns a full random 'IPv6Addr'
 randIPv6Addr :: IO IPv6Addr
 randIPv6Addr = do
-    l <- replicateM 8 (sixteenBitsArbToken "____")
+    l <- replicateM 8 $ sixteenBitsArbToken "____"
     return $ fromJust $ ipv6TokensToIPv6Addr $ intersperse Colon $ catMaybes l
 
 ipv6TokensToIPv6Addr :: [IPv6AddrToken] -> Maybe IPv6Addr

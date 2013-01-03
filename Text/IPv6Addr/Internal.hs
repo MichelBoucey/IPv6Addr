@@ -1,7 +1,7 @@
 -- -----------------------------------------------------------------------------
 -- | 
 -- Module      :  Text.IPv6Addr
--- Copyright   :  (c) Michel Boucey 2011-2012
+-- Copyright   :  (c) Michel Boucey 2011-2013
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
@@ -12,8 +12,7 @@
 -- -----------------------------------------------------------------------------
 
 module Text.IPv6Addr.Internal
-    (
-      colon
+    ( colon
     , doubleColon
     , sixteenBits
     , ipv4Addr
@@ -295,8 +294,8 @@ toDoubleColon tks =
             longestLengthZerosRun x =
                 maximum $ map longest x
               where longest t = case t of
-                                    (True,i) -> i
-                                    otherwise -> 0
+                                     (True,i)  -> i
+                                     otherwise -> 0
     zerosRunsList x =
         map helper $ groupZerosRuns x
       where
@@ -306,7 +305,6 @@ toDoubleColon tks =
         groupZerosRuns = group . filter (/= Colon)
 
 networkInterfacesIPv6AddrList :: IO [(String,IPv6)]
-networkInterfacesIPv6AddrList = do
-    n <- getNetworkInterfaces
-    return $ map networkInterfacesIPv6Addr n
+networkInterfacesIPv6AddrList =
+    getNetworkInterfaces >>= \n -> return $ map networkInterfacesIPv6Addr n
   where networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)
