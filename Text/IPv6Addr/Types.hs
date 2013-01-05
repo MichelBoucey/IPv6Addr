@@ -1,7 +1,7 @@
 -- -----------------------------------------------------------------------------
 -- |
 -- Module      :  Text.IPv6Addr
--- Copyright   :  (c) Michel Boucey 2011-2012
+-- Copyright   :  (c) Michel Boucey 2011-2013
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional

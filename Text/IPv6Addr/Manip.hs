@@ -15,6 +15,7 @@ module Text.IPv6Addr.Manip
     (
       module Text.IPv6Addr.Internal
     , sixteenBitsArbToken
+    , partialRandAddr
     , macAddrToIPv6AddrTokens
     , getTokIPv6AddrOf
     , getTokMacAddrOf
@@ -46,6 +47,13 @@ sixteenBitsArbToken m =
                 otherwise -> return c
           where hexRand = randomRIO(0,15) >>= \r -> return $ intToDigit r
 
+-- | Generates a partial 'IPv6Addr' with n 'SixteenBits'
+partialRandAddr :: Int -> IO [IPv6AddrToken]
+partialRandAddr n =
+    if n < 9 then do l <- replicateM n $ sixteenBitsArbToken "____"
+                     return $ intersperse Colon $ catMaybes l
+             else return []
+
 -- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
 --
 -- > macAddrToIPv6AddrTokens "fa:1d:58:cc:95:16" == [SixteenBits "fa1d",Colon,SixteenBits "58cc",Colon,SixteenBits "9516"]
@@ -70,9 +78,8 @@ macAddrToIPv6AddrTokens mac =
 --
 
 networkInterfacesMacAddrList :: IO [(String,MAC)]
-networkInterfacesMacAddrList = do
-    n <- getNetworkInterfaces
-    return $ map networkInterfacesMac n 
+networkInterfacesMacAddrList =
+    getNetworkInterfaces >>= \n -> return $ map networkInterfacesMac n 
   where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
 
 -- | Given a valid name of a local network interface, returns Just the list of

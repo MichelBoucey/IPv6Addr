@@ -19,11 +19,12 @@ module Text.IPv6Addr.Internal
     , expandTokens
     , maybeIPv6AddrToken
     , maybeIPv6AddrTokens
+    , ipv4AddrToIPv6AddrTokens
     , ipv6TokensToText
+    , ipv6TokensToIPv6Addr
     , isIPv6Addr
     , maybeTokIPv6Addr
     , maybeTokPureIPv6Addr
-    , ipv4AddrToIPv6AddrTokens
     , fromDoubleColon
     , toDoubleColon
     , networkInterfacesIPv6AddrList
@@ -83,7 +84,7 @@ eightBitsToken t =
         Right p -> do let i = fst p
                       if i >= 0 && i <= 255 && snd p == T.empty
                          then Just (EightBits t) else Nothing
-        Left _ -> Nothing
+        Left _  -> Nothing
 
 ipv4Token :: T.Text -> Maybe IPv4AddrToken
 ipv4Token t
@@ -103,10 +104,9 @@ sixteenBits t =
             -- "Leading zeros MUST be suppressed" (RFC 5952, 4.1)
             let t'= T.dropWhile (=='0') t
             if T.length t' < 5 && T.all isHexDigit t'
-               then if T.null t'
-                       then Just AllZeros
-                       -- Hexadecimal digits MUST be in lowercase (RFC 5952 4.3)
-                       else Just $ SixteenBits $ T.toLower t'
+               then
+                    -- Hexadecimal digits MUST be in lowercase (RFC 5952 4.3)
+                    Just (if T.null t' then AllZeros else SixteenBits $ T.toLower t')
                else Nothing
        else Nothing
 
@@ -116,9 +116,7 @@ expandTokens =
   where expTok AllZeros = SixteenBits tok4x0
         expTok (SixteenBits s) = do
             let ls = T.length s
-            if ls < 4
-               then SixteenBits (T.replicate (4 - ls) tok0 `T.append` s)
-               else SixteenBits s
+            SixteenBits (if ls < 4 then T.replicate (4 - ls) tok0 `T.append` s else s)
         expTok t = t
 
 -- | Returns Just one of the valid 'IPv6AddrToken', or Nothing.
@@ -182,7 +180,7 @@ countIPv4Addr =
      foldr oneMoreIPv4Addr 0
    where oneMoreIPv4Addr t c = case t of
                                    IPv4Addr _ -> c + 1
-                                   otherwise -> c
+                                   otherwise  -> c
 
 -- | Returns Just a list of 'IPv6AddrToken', or Nothing.
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
@@ -265,7 +263,8 @@ fromDoubleColon tks =
     else do
         let s = splitAt (fromJust $ elemIndex DoubleColon tks) tks
         let fsts = fst s
-        let snds = if length(snd s) >= 1 then tail(snd s) else []
+        let snds = if not (null (snd s)) then tail(snd s) else []
+        -- let snds = if length(snd s) >= 1 then tail(snd s) else []
         let fste = if null fsts then [] else fsts ++ [Colon]
         let snde = if null snds then [] else Colon : snds
         fste ++ allZerosTokensReplacement(quantityOfAllZerosTokenToReplace tks) ++ snde
@@ -308,3 +307,8 @@ networkInterfacesIPv6AddrList :: IO [(String,IPv6)]
 networkInterfacesIPv6AddrList =
     getNetworkInterfaces >>= \n -> return $ map networkInterfacesIPv6Addr n
   where networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)
+
+
+
+ipv6TokensToIPv6Addr :: [IPv6AddrToken] -> Maybe IPv6Addr
+ipv6TokensToIPv6Addr l = Just $ IPv6Addr $ ipv6TokensToText l

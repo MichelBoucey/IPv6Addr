@@ -31,7 +31,7 @@ import Data.Text.Read (decimal)
 import Numeric (showIntAtBase)
 
 import Text.IPv6Addr.Internal
-import Text.IPv6Addr.Manip (sixteenBitsArbToken)
+import Text.IPv6Addr.Manip (sixteenBitsArbToken,partialRandAddr)
 import Text.IPv6Addr.Types
 
 -- | Returns Just the text representation of a canonized
@@ -66,14 +66,9 @@ getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
 getIPv6AddrOf s = do
      l <- networkInterfacesIPv6AddrList
      case lookup s l of
-         Just a -> return $ maybeIPv6Addr $ T.pack $ show a
+         Just a  -> return $ maybeIPv6Addr $ T.pack $ show a
          Nothing -> return Nothing
 
 -- | Returns a full random 'IPv6Addr'
 randIPv6Addr :: IO IPv6Addr
-randIPv6Addr = do
-    l <- replicateM 8 $ sixteenBitsArbToken "____"
-    return $ fromJust $ ipv6TokensToIPv6Addr $ intersperse Colon $ catMaybes l
-
-ipv6TokensToIPv6Addr :: [IPv6AddrToken] -> Maybe IPv6Addr
-ipv6TokensToIPv6Addr l = Just $ IPv6Addr $ ipv6TokensToText l
+randIPv6Addr = partialRandAddr 8 >>= \p -> return $ IPv6Addr $ ipv6TokensToText p
