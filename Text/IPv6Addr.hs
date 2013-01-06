@@ -60,16 +60,19 @@ maybeFullIPv6Addr t =
 -- | Returns the reverse lookup domain name corresponding to the address
 -- as define in RFC 3596 section 2.5.
 --
--- > ip6arpa "4321:0:1:2:3:4:567:89ab" == "b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.ip6.arpa."
+-- > ip6arpa "4321:0:1:2:3:4:567:89ab" == Just "b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.ip6.arpa."
 --
--- ip6arpa :: T.Text -> Maybe T.Text
-
-revaddr :: T.Text -> T.Text -> T.Text
-revaddr i o = if i == T.empty then o
-              else do let c = T.last i
-                      if c /= ':'
-                      then revaddr (T.init i) (o `T.append` (T.pack [c]) `T.append` T.pack ".")
-                      else revaddr (T.init i) o
+ip6arpa :: T.Text -> Maybe T.Text
+ip6arpa t =
+    case maybeFullIPv6Addr t of
+         Just (IPv6Addr a) -> Just $ revaddr a T.empty
+         Nothing           -> Nothing 
+  where
+    revaddr i o =
+        if i == T.empty then o `T.append` T.pack "ip6.arpa."
+        else do let c = T.last i
+                revaddr (T.init i)
+                        (if c /= ':' then o `T.append` T.pack [c] `T.append` T.pack "." else o)
 
 -- | Returns Just the canonized 'IPv6Addr' of the given network interface,
 -- or Nothing.
