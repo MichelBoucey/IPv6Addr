@@ -19,6 +19,7 @@ module Text.IPv6Addr
     , maybeFullIPv6Addr
     , getIPv6AddrOf
     , randIPv6Addr
+    , ip6arpa
     ) where
 
 import Control.Monad (replicateM)
