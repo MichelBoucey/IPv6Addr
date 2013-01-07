@@ -2,11 +2,11 @@
 -- |
 -- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011-2013
--- License     :  BSD-style
+-- License     :  BSD-Style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address's text representation,
+-- Dealing with IPv6 address text representations,
 -- canonization and manipulations.
 --
 -- -----------------------------------------------------------------------------

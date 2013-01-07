@@ -2,11 +2,11 @@
 -- | 
 -- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011-2013
--- License     :  BSD-style
+-- License     :  BSD-Style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address text representation,
+-- Dealing with IPv6 address text representations,
 -- canonization and manipulations.
 --
 -- -----------------------------------------------------------------------------
@@ -119,7 +119,7 @@ expandTokens =
             SixteenBits (if ls < 4 then T.replicate (4 - ls) tok0 `T.append` s else s)
         expTok t = t
 
--- | Returns Just one of the valid 'IPv6AddrToken', or Nothing.
+-- | Returns 'Just' one of the valid 'IPv6AddrToken', or 'Nothing'.
 maybeIPv6AddrToken :: T.Text -> Maybe IPv6AddrToken
 maybeIPv6AddrToken t
     | isJust t' = t'
@@ -142,7 +142,7 @@ ipv6TokenToText (IPv4Addr a) = a
 ipv6TokensToText :: [IPv6AddrToken] -> T.Text
 ipv6TokensToText l = T.concat $ map ipv6TokenToText l
 
--- | Returns True if a list of 'IPv6AddrToken' constitutes a valid IPv6 Address.
+-- | Returns 'True' if a list of 'IPv6AddrToken' constitutes a valid IPv6 Address.
 isIPv6Addr :: [IPv6AddrToken] -> Bool
 isIPv6Addr [] = False
 isIPv6Addr [DoubleColon] = True
@@ -182,13 +182,13 @@ countIPv4Addr =
                                    IPv4Addr _ -> c + 1
                                    otherwise  -> c
 
--- | Returns Just a list of 'IPv6AddrToken', or Nothing.
+-- | Returns 'Just' a list of 'IPv6AddrToken', or 'Nothing'.
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 maybeIPv6AddrTokens t = mapM maybeIPv6AddrToken $ tokenizedBy ':' t
 
--- | This is the main function which returns Just the list of a tokenized IPv6
--- address's text representation validated against RFC 4291 and canonized
--- in conformation with RFC 5952, or Nothing.
+-- | This is the main function which returns 'Just' the list of a tokenized IPv6
+-- address text representation validated against RFC 4291 and canonized
+-- in conformation with RFC 5952, or 'Nothing'.
 maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokIPv6Addr t = 
     do ltks <- maybeIPv6AddrTokens t
@@ -200,7 +200,7 @@ maybeTokIPv6Addr t =
                   then init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks')
                   else ltks'
 
--- | Returns Just the list of tokenized pure IPv6 address, always rewriting an
+-- | Returns 'Just' the list of tokenized pure IPv6 address, always rewriting an
 -- embedded IPv4 address if present.
 maybeTokPureIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokPureIPv6Addr t =
@@ -240,7 +240,7 @@ ipv4AddrRewrite tks =
                  || [DoubleColon,SixteenBits tok5efe,Colon] `isSuffixOf` itks)
         otherwise -> False
 
--- | Rewrites Just an embedded 'IPv4Addr' into the corresponding list of pure
+-- | Rewrites 'Just' an embedded 'IPv4Addr' into the corresponding list of pure
 -- IPv6Addr tokens.
 --
 -- > ipv4AddrToIPv6AddrTokens (IPv4Addr "127.0.0.1") == [SixteenBits "7f0",Colon,SixteenBits "1"]
@@ -303,12 +303,10 @@ toDoubleColon tks =
           where lh = length h
         groupZerosRuns = group . filter (/= Colon)
 
+ipv6TokensToIPv6Addr :: [IPv6AddrToken] -> Maybe IPv6Addr
+ipv6TokensToIPv6Addr l = Just $ IPv6Addr $ ipv6TokensToText l
+
 networkInterfacesIPv6AddrList :: IO [(String,IPv6)]
 networkInterfacesIPv6AddrList =
     getNetworkInterfaces >>= \n -> return $ map networkInterfacesIPv6Addr n
   where networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)
-
-
-
-ipv6TokensToIPv6Addr :: [IPv6AddrToken] -> Maybe IPv6Addr
-ipv6TokensToIPv6Addr l = Just $ IPv6Addr $ ipv6TokensToText l

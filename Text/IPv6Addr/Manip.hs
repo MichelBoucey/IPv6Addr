@@ -2,11 +2,11 @@
 -- |
 -- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011-2013
--- License     :  BSD-style
+-- License     :  BSD-Style
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address's text representation,
+-- Dealing with IPv6 address text representations,
 -- canonization and manipulations.
 --
 -- -----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ import Network.Info
 import Text.IPv6Addr.Internal
 import Text.IPv6Addr.Types
 
--- | Returns an arbitrary 'SixteenBits' token based on a mask \"____\", each
+-- | Returns 'Just' an arbitrary 'SixteenBits' token based on a mask \"____\", each
 -- underscore being replaced by a random hexadecimal digit.
 --
 -- > sixteenBitsArbToken "_f__" == Just (SixteenBits "bfd4")
@@ -82,8 +82,8 @@ networkInterfacesMacAddrList =
     getNetworkInterfaces >>= \n -> return $ map networkInterfacesMac n 
   where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
 
--- | Given a valid name of a local network interface, returns Just the list of
--- tokens of the interface's IPv6 address.
+-- | Given a valid name of a local network interface, returns 'Just' the list of
+-- tokens of the interface's IPv6 address, or 'Nothing'.
 getTokIPv6AddrOf :: String -> IO (Maybe [IPv6AddrToken])
 getTokIPv6AddrOf s = do
      l <- networkInterfacesIPv6AddrList
@@ -91,8 +91,9 @@ getTokIPv6AddrOf s = do
          Just a -> return $ maybeTokIPv6Addr $ T.pack $ show a
          Nothing -> return Nothing
 
--- | Given the valid name of a local network interface,
--- returns the corresponding list of 'IPv6AddrToken' of the interface's MAC Address.
+-- | Given a valid name of a local network interface,
+-- returns 'Just' the corresponding list of 'IPv6AddrToken' of the interface's MAC Address,
+-- or 'Nothing'.
 getTokMacAddrOf :: String -> IO (Maybe [IPv6AddrToken])
 getTokMacAddrOf s = do
     l <- networkInterfacesMacAddrList
