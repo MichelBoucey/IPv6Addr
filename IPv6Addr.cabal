@@ -1,5 +1,5 @@
 name:		IPv6Addr
-version:	0.3
+version:	0.3.0.1
 license:	BSD3
 license-file:	LICENSE
 Copyright:      Copyright © 2011-2013 - Michel Boucey

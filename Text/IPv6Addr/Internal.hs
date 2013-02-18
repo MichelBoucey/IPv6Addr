@@ -1,4 +1,5 @@
 -- -----------------------------------------------------------------------------
+
 -- | 
 -- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011-2013
@@ -6,9 +7,9 @@
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address text representations,
--- canonization and manipulations.
+-- Dealing with IPv6 address text representations, canonization and manipulations.
 --
+
 -- -----------------------------------------------------------------------------
 
 module Text.IPv6Addr.Internal
@@ -241,7 +242,7 @@ ipv4AddrRewrite tks =
         otherwise -> False
 
 -- | Rewrites 'Just' an embedded 'IPv4Addr' into the corresponding list of pure
--- IPv6Addr tokens.
+-- 'IPv6Addr' tokens.
 --
 -- > ipv4AddrToIPv6AddrTokens (IPv4Addr "127.0.0.1") == [SixteenBits "7f0",Colon,SixteenBits "1"]
 --

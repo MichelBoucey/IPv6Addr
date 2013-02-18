@@ -1,4 +1,5 @@
 -- -----------------------------------------------------------------------------
+
 -- |
 -- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011-2013
@@ -6,9 +7,9 @@
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address text representations,
--- canonization and manipulations.
+-- Dealing with IPv6 address text representations, canonization and manipulations.
 --
+
 -- -----------------------------------------------------------------------------
 
 module Text.IPv6Addr.Types where

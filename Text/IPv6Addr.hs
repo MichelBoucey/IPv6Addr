@@ -1,4 +1,5 @@
 -- -----------------------------------------------------------------------------
+
 -- | 
 -- Module      :  Text.IPv6Addr
 -- Copyright   :  (c) Michel Boucey 2011-2013
@@ -6,9 +7,9 @@
 -- Maintainer  :  michel.boucey@gmail.com
 -- Stability   :  provisional
 --
--- Dealing with IPv6 address text representations,
--- canonization and manipulations.
+-- Dealing with IPv6 address text representations, canonization and manipulations.
 --
+
 -- -----------------------------------------------------------------------------
 
 module Text.IPv6Addr
@@ -58,8 +59,8 @@ maybeFullIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybeFullIPv6Addr t =
    maybeTokPureIPv6Addr t >>= \m -> ipv6TokensToIPv6Addr $ expandTokens $ fromDoubleColon m
 
--- | Returns 'Just' the reverse lookup domain name corresponding of the given IPv6 address,
--- as define in RFC 3596 Section 2.5, or 'Nothing'.
+-- | Returns 'Just' the reverse lookup domain name corresponding of the given IPv6 address
+-- (RFC 3596 Section 2.5), or 'Nothing'.
 --
 -- > ip6arpa "4321:0:1:2:3:4:567:89ab" == Just "b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.ip6.arpa."
 --
@@ -76,7 +77,7 @@ ip6arpa t =
                         (if c /= ':' then o `T.append` T.pack [c] `T.append` T.pack "." else o)
 
 -- | Returns 'Just' the canonized 'IPv6Addr' of the given network interface,
--- or Nothing.
+-- or 'Nothing'.
 --
 -- > getIPv6AddrOf "eth0"
 --
