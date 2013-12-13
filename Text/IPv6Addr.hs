@@ -4,7 +4,6 @@
 -- Copyright   :  (c) Michel Boucey 2011-2013
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
--- Stability   :  provisional
 --
 -- Dealing with IPv6 address text representations, canonization and manipulations.
 --
@@ -59,11 +58,16 @@ maybeFullIPv6Addr t =
 -- > ip6arpa (IPv6Addr "4321:0:1:2:3:4:567:89ab") == Just "b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.ip6.arpa."
 --
 ip6arpa :: IPv6Addr -> T.Text
-ip6arpa t = rev (fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr t) T.empty
-    where rev i o = if i == T.empty then o `T.append` T.pack "ip6.arpa."
-                       else do let c = T.last i
-                               rev (T.init i)
-                                   (if c /= ':' then o `T.append` T.pack [c] `T.append` T.pack "." else o)
+ip6arpa t =
+    rev (fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr t) T.empty
+  where
+    rev i o = if i == T.empty
+                  then o `T.append` T.pack "ip6.arpa."
+                  else do let c = T.last i
+                          rev (T.init i)
+                              (if c /= ':'
+                                   then o `T.append` T.pack [c] `T.append` T.pack "."
+                                   else o)
 
 -- | Returns 'Just' the canonized 'IPv6Addr' of the given network interface,
 -- or 'Nothing'.

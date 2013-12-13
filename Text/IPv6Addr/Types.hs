@@ -5,7 +5,6 @@
 -- Copyright   :  (c) Michel Boucey 2011-2013
 -- License     :  BSD-Style
 -- Maintainer  :  michel.boucey@gmail.com
--- Stability   :  provisional
 --
 -- Dealing with IPv6 address text representations, canonization and manipulations.
 --

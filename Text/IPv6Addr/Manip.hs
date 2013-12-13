@@ -5,7 +5,6 @@
 -- Copyright   :  (c) Michel Boucey 2011-2013
 -- License     :  BSD-Style
 -- Maintainer  :  michel.boucey@gmail.com
--- Stability   :  provisional
 --
 -- Dealing with IPv6 address text representations, canonization and manipulations.
 --
@@ -13,25 +12,22 @@
 -- -----------------------------------------------------------------------------
 
 module Text.IPv6Addr.Manip
-    (
-      module Text.IPv6Addr.Internal
-    , sixteenBitArbToken
+    ( sixteenBitArbToken
     , partialRandAddr
     , macAddrToIPv6AddrTokens
     , getTokIPv6AddrOf
     , getTokMacAddrOf
     ) where
 
-import Control.Monad (replicateM)
 import Control.Applicative ((<$>))
+import Control.Monad (replicateM)
 import Data.Attoparsec.Text as A
 import Data.Char (intToDigit,isHexDigit)
 import Data.List (intersperse)
 import Data.Maybe (fromJust)
 import qualified Data.Text as T
-import System.Random (randomRIO)
-
 import Network.Info
+import System.Random (randomRIO)
 
 import Text.IPv6Addr.Internal
 import Text.IPv6Addr.Types
@@ -44,9 +40,10 @@ import Text.IPv6Addr.Types
 sixteenBitArbToken :: String -> IO IPv6AddrToken
 sixteenBitArbToken m =
     mapM getHex m >>= \g -> return $ SixteenBit $ T.dropWhile (=='0') $ T.pack g
-  where getHex c
-            | c == '_'  = randomRIO(0,15) >>= \r -> return $ intToDigit r
-            | otherwise = return c
+  where
+    getHex c
+        | c == '_'  = randomRIO(0,15) >>= \r -> return $ intToDigit r
+        | otherwise = return c
 
 -- | Generates a partial 'IPv6Addr' with n 'SixteenBit'
 partialRandAddr :: Int -> IO [IPv6AddrToken]
@@ -61,8 +58,8 @@ partialRandAddr n
 macAddrToIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 macAddrToIPv6AddrTokens t =
     case parse macAddr t of
-         Done a b  -> if a==T.empty then intersperse Colon <$> b else Nothing
-         _         -> Nothing
+        Done a b -> if a==T.empty then intersperse Colon <$> b else Nothing
+        _        -> Nothing
 
 --
 -- Functions based upon Network.Info to get local MAC and IPv6 addresses.
