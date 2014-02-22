@@ -2,7 +2,7 @@
 
 -- | 
 -- Module      :  Text.IPv6Addr
--- Copyright   :  (c) Michel Boucey 2011-2013
+-- Copyright   :  Copyright © Michel Boucey 2011-2014
 -- License     :  BSD-Style
 -- Maintainer  :  michel.boucey@gmail.com
 --
@@ -55,8 +55,7 @@ ipv6TokenToText :: IPv6AddrToken -> T.Text
 ipv6TokenToText (SixteenBit s) = s 
 ipv6TokenToText Colon = T.pack ":"
 ipv6TokenToText DoubleColon = T.pack "::"
--- "A single 16-bit 0000 field MUST be represented as 0" (RFC 5952, 4.1)
-ipv6TokenToText AllZeros = tok0  -- 
+ipv6TokenToText AllZeros = tok0 -- "A single 16-bit 0000 field MUST be represented as 0" (RFC 5952, 4.1)
 ipv6TokenToText (IPv4Addr a) = a
 
 -- | Returns 'True' if a list of 'IPv6AddrToken' constitutes a valid IPv6 Address.
@@ -178,8 +177,7 @@ ipv4AddrRewrite tks =
     tokffff = T.pack "ffff"
     tok5efe = T.pack "5efe"
 
--- | Rewrites 'Just' an embedded 'IPv4Addr' into the corresponding list of pure
--- 'IPv6Addr' tokens.
+-- | Rewrites 'Just' an embedded 'IPv4Addr' into the corresponding list of pure 'IPv6Addr' tokens.
 --
 -- > ipv4AddrToIPv6AddrTokens (IPv4Addr "127.0.0.1") == [SixteenBits "7f0",Colon,SixteenBits "1"]
 --
@@ -188,9 +186,9 @@ ipv4AddrToIPv6AddrTokens t =
     case t of
         IPv4Addr a -> do
             let m = toHex a
-            [ SixteenBit ((!!) m 0 `T.append` addZero ((!!) m 1))
+            [  SixteenBit ((!!) m 0 `T.append` addZero ((!!) m 1))
              , Colon
-             , SixteenBit ((!!) m 2 `T.append` addZero ((!!) m 3))]
+             , SixteenBit ((!!) m 2 `T.append` addZero ((!!) m 3)) ]
         _          -> [t]
       where
         toHex a = map (\x -> T.pack $ showHex (read (T.unpack x)::Int) "") $ T.split (=='.') a

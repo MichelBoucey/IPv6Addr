@@ -1,7 +1,7 @@
 -- -----------------------------------------------------------------------------
 
 -- Module      :  Text.IPv6Addr
--- Copyright   :  (c) Michel Boucey 2011-2013
+-- Copyright   :  Copyright © Michel Boucey 2011-2014
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 --
@@ -52,17 +52,16 @@ maybeFullIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybeFullIPv6Addr t =
     maybeTokPureIPv6Addr t >>= (ipv6TokensToIPv6Addr . expandTokens . fromDoubleColon)
 
--- | Returns 'Just' the reverse lookup domain name corresponding of the given IPv6 address
--- (RFC 3596 Section 2.5), or 'Nothing'.
+-- | Returns the reverse lookup domain name corresponding of the given IPv6 address (RFC 3596 Section 2.5).
 --
--- > ip6arpa (IPv6Addr "4321:0:1:2:3:4:567:89ab") == Just "b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.ip6.arpa."
+-- > ip6arpa (IPv6Addr "4321:0:1:2:3:4:567:89ab") == "b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.IP6.ARPA."
 --
 ip6arpa :: IPv6Addr -> T.Text
 ip6arpa t =
     rev (fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr t) T.empty
   where
     rev i o = if i == T.empty
-                  then o `T.append` T.pack "ip6.arpa."
+                  then o `T.append` T.pack "IP6.ARPA."
                   else do let c = T.last i
                           rev (T.init i)
                               (if c /= ':'

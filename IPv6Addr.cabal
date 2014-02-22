@@ -1,8 +1,8 @@
 Name:		IPv6Addr
-Version:	0.4
+Version:	0.4.1
 License:	BSD3
 License-File:	LICENSE
-Copyright:      Copyright © 2011-2013 - Michel Boucey
+Copyright:      Copyright © 2011-2014 - Michel Boucey
 Author:		Michel Boucey <michel.boucey@gmail.com>
 Maintainer:	Michel Boucey <michel.boucey@gmail.com>
 Bug-Reports:    mailto:michel.boucey@gmail.com
@@ -18,9 +18,9 @@ Source-Repository head
 
 Library
   Build-Depends: attoparsec,
-                 base >= 3 && <= 5,
-                 bytestring >= 0.9,
-                 network-info >= 0.2,
+                 base,
+                 bytestring,
+                 network-info,
                  random,
                  text
 
