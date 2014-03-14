@@ -13,9 +13,9 @@
 module Text.IPv6Addr
     (
       IPv6Addr (IPv6Addr)
-    , maybeIPv6Addr
-    , maybePureIPv6Addr
-    , maybeFullIPv6Addr
+    , canonicalIPv6Addr
+    , pureIPv6Addr
+    , fullIPv6Addr
     , getIPv6AddrOf
     , ip6arpa
     , randIPv6Addr
@@ -32,24 +32,24 @@ import Text.IPv6Addr.Types
 -- | Returns 'Just' the text representation of a canonized
 -- 'IPv6Addr' in conformation with RFC 5952, or 'Nothing'.
 --
--- > maybeIPv6Addr "0:0::FFFF:192.0.2.128" == Just (IPv6Addr "::ffff:192.0.2.128")
+-- > canonicalIPv6Addr "0:0::FFFF:192.0.2.128" == Just (IPv6Addr "::ffff:192.0.2.128")
 --
-maybeIPv6Addr :: T.Text -> Maybe IPv6Addr
-maybeIPv6Addr t = maybeTokIPv6Addr t >>= ipv6TokensToIPv6Addr
+canonicalIPv6Addr :: T.Text -> Maybe IPv6Addr
+canonicalIPv6Addr t = maybeTokIPv6Addr t >>= ipv6TokensToIPv6Addr
 
 -- | Returns 'Just' a pure 'IPv6Addr', or 'Nothing'.
 --
--- > maybePureIPv6Addr "::ffff:192.0.2.128" == Just (IPv6Addr "::ffff:c000:280")
+-- > pureIPv6Addr "::ffff:192.0.2.128" == Just (IPv6Addr "::ffff:c000:280")
 --
-maybePureIPv6Addr :: T.Text -> Maybe IPv6Addr
-maybePureIPv6Addr t = maybeTokPureIPv6Addr t >>= ipv6TokensToIPv6Addr
+pureIPv6Addr :: T.Text -> Maybe IPv6Addr
+pureIPv6Addr t = maybeTokPureIPv6Addr t >>= ipv6TokensToIPv6Addr
 
 -- | Returns 'Just' a pure and expanded 'IPv6Addr', or 'Nothing'.
 --
--- > maybeFullIPv6Addr "::ffff:192.0.2.128" == Just (IPv6Addr "0000:0000:0000:0000:0000:ffff:c000:0280")
+-- > fullIPv6Addr "::ffff:192.0.2.128" == Just (IPv6Addr "0000:0000:0000:0000:0000:ffff:c000:0280")
 --
-maybeFullIPv6Addr :: T.Text -> Maybe IPv6Addr
-maybeFullIPv6Addr t =
+fullIPv6Addr :: T.Text -> Maybe IPv6Addr
+fullIPv6Addr t =
     maybeTokPureIPv6Addr t >>= (ipv6TokensToIPv6Addr . expandTokens . fromDoubleColon)
 
 -- | Returns the reverse lookup domain name corresponding of the given IPv6 address (RFC 3596 Section 2.5).
@@ -58,7 +58,7 @@ maybeFullIPv6Addr t =
 --
 ip6arpa :: IPv6Addr -> T.Text
 ip6arpa t =
-    rev (fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr t) T.empty
+    rev (fromIPv6Addr $ fromJust $ fullIPv6Addr $ fromIPv6Addr t) T.empty
   where
     rev i o = if i == T.empty
                   then o `T.append` T.pack "IP6.ARPA."
@@ -75,7 +75,7 @@ ip6arpa t =
 --
 getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
 getIPv6AddrOf s =
-    maybe Nothing (maybeIPv6Addr . T.pack . show) <$> (lookup s <$> networkInterfacesIPv6AddrList)
+    maybe Nothing (canonicalIPv6Addr . T.pack . show) <$> (lookup s <$> networkInterfacesIPv6AddrList)
 
 -- | Returns a random 'IPv6Addr'
 randIPv6Addr :: IO IPv6Addr

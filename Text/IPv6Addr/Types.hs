@@ -15,7 +15,7 @@ module Text.IPv6Addr.Types where
 
 import qualified Data.Text as T
 
-data IPv6Addr = IPv6Addr T.Text
+data IPv6Addr = IPv6Addr T.Text deriving (Eq)
 
 instance Show IPv6Addr where
     show (IPv6Addr addr) = T.unpack addr
