@@ -1,5 +1,5 @@
 Name:		IPv6Addr
-Version:	0.4.1
+Version:	0.5
 License:	BSD3
 License-File:	LICENSE
 Copyright:      Copyright © 2011-2014 - Michel Boucey
@@ -20,6 +20,8 @@ Library
   Build-Depends: attoparsec,
                  base,
                  bytestring,
+                 iproute,
+                 network,
                  network-info,
                  random,
                  text

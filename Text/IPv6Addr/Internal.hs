@@ -255,7 +255,7 @@ networkInterfacesIPv6AddrList =
 
 fullSixteenBit :: T.Text -> Maybe IPv6AddrToken
 fullSixteenBit t =
-    case parse fourHexaChars t of
+    case parse ipv6AddrFullChunk t of
         Done a b  -> if a==T.empty then Just $ SixteenBit $ T.pack b else Nothing
         _         -> Nothing
 
@@ -271,7 +271,7 @@ macAddr = do
 
 sixteenBit :: Parser IPv6AddrToken
 sixteenBit = do
-    r <- fourHexaChars <|> count 3 hexaChar <|> count 2 hexaChar <|> count 1 hexaChar
+    r <- ipv6AddrFullChunk <|> count 3 hexaChar <|> count 2 hexaChar <|> count 1 hexaChar
     -- "Leading zeros MUST be suppressed" (RFC 5952, 4.1)
     let r' = T.dropWhile (=='0') $ T.pack r
     return $ if T.null r'
@@ -313,8 +313,8 @@ colon = do
     string $ T.pack ":"
     return Colon
 
-fourHexaChars :: Parser String
-fourHexaChars = count 4 hexaChar
+ipv6AddrFullChunk :: Parser String
+ipv6AddrFullChunk = count 4 hexaChar
 
 hexaChar :: Parser Char
 hexaChar = satisfy (inClass "0-9a-fA-F")

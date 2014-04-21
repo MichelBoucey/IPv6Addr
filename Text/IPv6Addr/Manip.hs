@@ -12,8 +12,8 @@
 -- -----------------------------------------------------------------------------
 
 module Text.IPv6Addr.Manip
-    ( sixteenBitArbToken
-    , partialRandAddr
+    ( randIPv6AddrChunk
+    , randPartialIPv6Addr
     , macAddrToIPv6AddrTokens
     , getTokIPv6AddrOf
     , getTokMacAddrOf
@@ -32,24 +32,24 @@ import System.Random (randomRIO)
 import Text.IPv6Addr.Internal
 import Text.IPv6Addr.Types
 
--- | Returns 'Just' an arbitrary 'SixteenBit' token based on a mask \"____\", each
+-- | Returns 'Just' a random 'SixteenBit' token based on a mask \"____\", each
 -- underscore being replaced by a random hexadecimal digit.
 --
--- > sixteenBitArbToken "_f__" == Just (SixteenBit "bfd4")
+-- > randIPv6AddrChunk "_f__" == Just (SixteenBit "bfd4")
 -- 
-sixteenBitArbToken :: String -> IO IPv6AddrToken
-sixteenBitArbToken m =
+randIPv6AddrChunk :: String -> IO IPv6AddrToken
+randIPv6AddrChunk m =
     mapM getHex m >>= \g -> return $ SixteenBit $ T.dropWhile (=='0') $ T.pack g
   where
     getHex c
-        | c == '_'  = randomRIO(0,15) >>= \r -> return $ intToDigit r
+        | c == '_'  = intToDigit <$> randomRIO (0,15)
         | otherwise = return c
 
--- | Generates a partial 'IPv6Addr' with n 'SixteenBit'
-partialRandAddr :: Int -> IO [IPv6AddrToken]
-partialRandAddr n
-    | n > 0 && n < 9 = intersperse Colon <$> replicateM n (sixteenBitArbToken "____")
-    | otherwise = return []
+-- | Generates a random partial 'IPv6Addr' with n 'SixteenBit'
+randPartialIPv6Addr :: Int -> IO [IPv6AddrToken]
+randPartialIPv6Addr n
+    | n > 0 && n < 9 = intersperse Colon <$> replicateM n (randIPv6AddrChunk "____")
+    | otherwise      = return []
 
 -- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
 --
@@ -58,7 +58,7 @@ partialRandAddr n
 macAddrToIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 macAddrToIPv6AddrTokens t =
     case parse macAddr t of
-        Done a b -> if a==T.empty then intersperse Colon <$> b else Nothing
+        Done a b -> if a == T.empty then intersperse Colon <$> b else Nothing
         _        -> Nothing
 
 --
