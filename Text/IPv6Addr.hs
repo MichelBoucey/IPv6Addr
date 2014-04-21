@@ -16,10 +16,11 @@ module Text.IPv6Addr
     , maybeIPv6Addr
     , maybePureIPv6Addr
     , maybeFullIPv6Addr
+    , sameIPv6Addr
     , fromIPv6Addr
-    , toIP6ARPA
-    , toHostName
     , toIPv6
+    , toHostName
+    , toIP6ARPA
     , getIPv6AddrOf
     , randIPv6Addr
     ) where
@@ -59,6 +60,15 @@ maybePureIPv6Addr t = maybeTokPureIPv6Addr t >>= ipv6TokensToIPv6Addr
 --
 maybeFullIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybeFullIPv6Addr t = maybeTokPureIPv6Addr t >>= (ipv6TokensToIPv6Addr . expandTokens . fromDoubleColon)
+
+-- | Returns 'True' if arguments are two textual representations of the same IPv6 address.
+sameIPv6Addr :: T.Text -> T.Text -> Bool
+sameIPv6Addr a b =
+    case maybePureIPv6Addr a of
+        Nothing -> False
+        Just a' -> case maybePureIPv6Addr b of
+                       Nothing -> False
+                       Just b' -> a' == b'
 
 -- | Returns the reverse lookup domain name corresponding of the given IPv6 address (RFC 3596 Section 2.5).
 --
