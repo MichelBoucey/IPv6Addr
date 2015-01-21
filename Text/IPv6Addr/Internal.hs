@@ -2,7 +2,7 @@
 
 -- | 
 -- Module      :  Text.IPv6Addr
--- Copyright   :  Copyright © Michel Boucey 2011-2014
+-- Copyright   :  Copyright © Michel Boucey 2011-2015
 -- License     :  BSD-Style
 -- Maintainer  :  michel.boucey@gmail.com
 --
@@ -10,6 +10,8 @@
 --
 
 -- -----------------------------------------------------------------------------
+
+{-# LANGUAGE OverloadedStrings #-}
 
 module Text.IPv6Addr.Internal
     ( expandTokens
@@ -28,9 +30,9 @@ module Text.IPv6Addr.Internal
     ) where
 
 import Control.Monad (replicateM)
-import Data.Attoparsec.Text as A
+import Data.Attoparsec.Text
 import Data.Char (isDigit,isHexDigit,toLower)
-import Control.Applicative ((<|>))
+import Control.Applicative ((<|>),(<*))
 import Data.List (group,isSuffixOf,elemIndex,elemIndices,intersperse)
 import Numeric (showHex)
 import qualified Data.Text as T
@@ -40,7 +42,7 @@ import Network.Info
 
 import Text.IPv6Addr.Types
 
-tok0 = T.pack "0"
+tok0 = "0"
 
 -- | Returns the 'Text' of an IPv6 address.
 fromIPv6Addr :: IPv6Addr -> T.Text
@@ -53,8 +55,8 @@ ipv6TokensToText l = T.concat $ map ipv6TokenToText l
 -- | Returns the corresponding 'Text' of an IPv6 address token.
 ipv6TokenToText :: IPv6AddrToken -> T.Text
 ipv6TokenToText (SixteenBit s) = s 
-ipv6TokenToText Colon = T.pack ":"
-ipv6TokenToText DoubleColon = T.pack "::"
+ipv6TokenToText Colon = ":"
+ipv6TokenToText DoubleColon = "::"
 ipv6TokenToText AllZeros = tok0 -- "A single 16-bit 0000 field MUST be represented as 0" (RFC 5952, 4.1)
 ipv6TokenToText (IPv4Addr a) = a
 
@@ -101,7 +103,7 @@ isIPv6Addr tks =
                         AllZeros     -> True
                         _            -> False
                 countDoubleColon l = length $ elemIndices DoubleColon l
-                tok1 = T.pack "1"
+                tok1 = "1"
 
 countIPv4Addr = foldr oneMoreIPv4Addr 0
   where
@@ -168,14 +170,14 @@ ipv4AddrRewrite tks =
             not (itks == [DoubleColon]
                  || itks == [DoubleColon,SixteenBit tokffff,Colon]
                  || itks == [DoubleColon,SixteenBit tokffff,Colon,AllZeros,Colon]
-                 || itks == [SixteenBit (T.pack "64"),Colon,SixteenBit (T.pack "ff9b"),DoubleColon]
-                 || [SixteenBit (T.pack "200"),Colon,SixteenBit tok5efe,Colon] `isSuffixOf` itks
+                 || itks == [SixteenBit "64",Colon,SixteenBit "ff9b",DoubleColon]
+                 || [SixteenBit "200",Colon,SixteenBit tok5efe,Colon] `isSuffixOf` itks
                  || [AllZeros,Colon,SixteenBit tok5efe,Colon] `isSuffixOf` itks
                  || [DoubleColon,SixteenBit tok5efe,Colon] `isSuffixOf` itks)
         _          -> False
   where
-    tokffff = T.pack "ffff"
-    tok5efe = T.pack "5efe"
+    tokffff = "ffff"
+    tok5efe = "5efe"
 
 -- | Rewrites 'Just' an embedded 'IPv4Addr' into the corresponding list of pure 'IPv6Addr' tokens.
 --
@@ -197,7 +199,7 @@ ipv4AddrToIPv6AddrTokens t =
 expandTokens :: [IPv6AddrToken] -> [IPv6AddrToken]
 expandTokens = map expandToken
   where expandToken (SixteenBit s) = SixteenBit $ T.justifyRight 4 '0' s
-        expandToken AllZeros = SixteenBit $ T.pack "0000"
+        expandToken AllZeros = SixteenBit "0000"
         expandToken t = t
 
 fromDoubleColon :: [IPv6AddrToken] -> [IPv6AddrToken]
@@ -261,13 +263,13 @@ fullSixteenBit t =
 
 macAddr :: Parser (Maybe [IPv6AddrToken])
 macAddr = do
-    n1 <- count 2 hexaChar <*. T.pack ":"
-    n2 <- count 2 hexaChar <*. T.pack ":"
-    n3 <- count 2 hexaChar <*. T.pack ":"
-    n4 <- count 2 hexaChar <*. T.pack ":"
-    n5 <- count 2 hexaChar <*. T.pack ":"
+    n1 <- count 2 hexaChar <* ":"
+    n2 <- count 2 hexaChar <* ":"
+    n3 <- count 2 hexaChar <* ":"
+    n4 <- count 2 hexaChar <* ":"
+    n5 <- count 2 hexaChar <* ":"
     n6 <- count 2 hexaChar
-    return $ maybeIPv6AddrTokens $ T.concat $ map T.pack [n1,n2,n3,n4,n5,n6]
+    return $ maybeIPv6AddrTokens $ T.pack $ concat [n1,n2,n3,n4,n5,n6]
 
 sixteenBit :: Parser IPv6AddrToken
 sixteenBit = do
@@ -281,22 +283,21 @@ sixteenBit = do
 
 ipv4Addr :: Parser IPv6AddrToken
 ipv4Addr = do
-    n1 <- manyDigits <*. dot
+    n1 <- manyDigits <* "."
     if n1 /= T.empty
-        then do n2 <- manyDigits <*. dot
+        then do n2 <- manyDigits <* "."
                 if n2 /= T.empty
-                    then do n3 <- manyDigits <*. dot
+                    then do n3 <- manyDigits <* "."
                             if n3 /= T.empty
                                 then do n4 <- manyDigits
                                         if n4 /= T.empty
-                                            then return $ IPv4Addr $ T.intercalate dot [n1,n2,n3,n4]
+                                            then return $ IPv4Addr $ T.intercalate "." [n1,n2,n3,n4]
                                             else parserFailure  
                                 else parserFailure  
                     else parserFailure  
         else parserFailure  
   where
     parserFailure = fail "ipv4Addr parsing failure"
-    dot = T.pack "."
     manyDigits = do
       ds <- takeWhile1 isDigit
       case R.decimal ds of
@@ -305,12 +306,12 @@ ipv4Addr = do
 
 doubleColon :: Parser IPv6AddrToken
 doubleColon = do
-    string $ T.pack "::"
+    string "::"
     return DoubleColon
 
 colon :: Parser IPv6AddrToken
 colon = do
-    string $ T.pack ":"
+    string ":"
     return Colon
 
 ipv6AddrFullChunk :: Parser String

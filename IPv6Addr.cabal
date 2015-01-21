@@ -1,8 +1,8 @@
 Name:		IPv6Addr
-Version:	0.5
+Version:	0.5.1.0
 License:	BSD3
 License-File:	LICENSE
-Copyright:      Copyright © 2011-2014 - Michel Boucey
+Copyright:      Copyright © 2011-2015 - Michel Boucey
 Author:		Michel Boucey <michel.boucey@gmail.com>
 Maintainer:	Michel Boucey <michel.boucey@gmail.com>
 Bug-Reports:    mailto:michel.boucey@gmail.com
@@ -14,7 +14,7 @@ Cabal-Version:	>= 1.8
 
 Source-Repository head
   Type: git
-  Location: https://github.com/MichelBoucey/IPv6Addr
+  Location: https://github.com/MichelBoucey/IPv6Addr.git
 
 Library
   Build-Depends: attoparsec,

@@ -1,7 +1,7 @@
 -- -----------------------------------------------------------------------------
 
 -- Module      :  Text.IPv6Addr
--- Copyright   :  Copyright © Michel Boucey 2011-2014
+-- Copyright   :  Copyright © Michel Boucey 2011-2015
 -- License     :  BSD-style
 -- Maintainer  :  michel.boucey@gmail.com
 --
@@ -9,6 +9,8 @@
 --
 
 -- -----------------------------------------------------------------------------
+
+{-# LANGUAGE OverloadedStrings #-}
 
 module Text.IPv6Addr
     (
@@ -49,19 +51,19 @@ maybeIPv6Addr t = maybeTokIPv6Addr t >>= ipv6TokensToIPv6Addr
 
 -- | Returns 'Just' a pure 'IPv6Addr', or 'Nothing'.
 --
--- > mabePureIPv6Addr "::ffff:192.0.2.128" == Just (IPv6Addr "::ffff:c000:280")
+-- > maybePureIPv6Addr "::ffff:192.0.2.128" == Just (IPv6Addr "::ffff:c000:280")
 --
 maybePureIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybePureIPv6Addr t = maybeTokPureIPv6Addr t >>= ipv6TokensToIPv6Addr
 
 -- | Returns 'Just' a pure and fully expanded 'IPv6Addr', or 'Nothing'.
 --
--- > mayebFullIPv6Addr "::ffff:192.0.2.128" == Just (IPv6Addr "0000:0000:0000:0000:0000:ffff:c000:0280")
+-- > maybeFullIPv6Addr "::ffff:192.0.2.128" == Just (IPv6Addr "0000:0000:0000:0000:0000:ffff:c000:0280")
 --
 maybeFullIPv6Addr :: T.Text -> Maybe IPv6Addr
 maybeFullIPv6Addr t = maybeTokPureIPv6Addr t >>= (ipv6TokensToIPv6Addr . expandTokens . fromDoubleColon)
 
--- | Returns 'True' if arguments are two textual representations of the same IPv6 address.
+-- | Returns 'True' if arguments are two textual representations of a same IPv6 address.
 sameIPv6Addr :: T.Text -> T.Text -> Bool
 sameIPv6Addr a b =
     case maybePureIPv6Addr a of
@@ -76,10 +78,10 @@ sameIPv6Addr a b =
 --
 toIP6ARPA :: IPv6Addr -> T.Text
 toIP6ARPA a =
-    T.append (T.reverse $ T.concatMap trans $ fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr a) (T.pack "IP6.ARPA.")
+    T.append (T.reverse $ T.concatMap trans $ fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr a) "IP6.ARPA."
   where
     trans ':' = T.empty
-    trans c   = T.append (T.pack ".") (T.pack [c])
+    trans c   = T.append "." (T.pack [c])
 
 -- | Given an 'IPv6Addr', returns the corresponding 'HostName'.
 toHostName :: IPv6Addr -> HostName

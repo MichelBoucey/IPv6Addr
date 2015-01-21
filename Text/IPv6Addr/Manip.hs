@@ -2,7 +2,7 @@
 
 -- |
 -- Module      :  Text.IPv6Addr
--- Copyright   :  Copyright © Michel Boucey 2011-2014
+-- Copyright   :  Copyright © Michel Boucey 2011-2015
 -- License     :  BSD-Style
 -- Maintainer  :  michel.boucey@gmail.com
 --
