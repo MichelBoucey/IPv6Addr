@@ -25,6 +25,7 @@ module Text.IPv6Addr
     , toIP6ARPA
     , getIPv6AddrOf
     , randIPv6Addr
+    , randIPv6AddrWithPrefix
     ) where
 
 import Control.Applicative (pure,(<$>),(<*>))
@@ -111,3 +112,31 @@ randIPv6Addr = do
                           8 -> randPartialIPv6Addr 8
                           _ -> concat <$> sequence [randPartialIPv6Addr r,pure [DoubleColon],randPartialIPv6Addr r']
     return $ fromJust $ ipv6TokensToIPv6Addr tks
+
+-- | Returns a random 'IPv6Addr' with the given prefix
+randIPv6AddrWithPrefix :: T.Text -> IO (Maybe IPv6Addr)
+randIPv6AddrWithPrefix t =
+    case maybeIPv6AddrTokens t of
+        Just tks -> do
+            let ntks = 8 - countChunks tks
+            if ntks > 0
+                then do
+                    rtks <- randPartialIPv6Addr ntks
+                    let tks' = concat [addColon tks,rtks]
+                    return $ if isIPv6Addr tks'
+                                 then ipv6TokensToIPv6Addr $ (toDoubleColon . fromDoubleColon) tks'
+                                 else Nothing
+                else return Nothing
+        Nothing  -> return Nothing
+  where
+    countChunks =
+        foldr oneMoreChunk 0
+      where
+        oneMoreChunk s c = case s of
+                               SixteenBit _ -> c + 1
+                               AllZeros     -> c + 1
+                               _            -> c
+    addColon ts = case last ts of
+                      SixteenBit _ -> ts ++ [Colon]
+                      AllZeros     -> ts ++ [Colon]
+                      _            -> ts 
