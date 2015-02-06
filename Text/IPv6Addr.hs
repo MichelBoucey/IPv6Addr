@@ -116,27 +116,38 @@ randIPv6Addr = do
 -- | Returns a random 'IPv6Addr' with the given prefix
 randIPv6AddrWithPrefix :: T.Text -> IO (Maybe IPv6Addr)
 randIPv6AddrWithPrefix t =
-    case maybeIPv6AddrTokens t of
-        Just tks -> do
-            let ntks = 8 - countChunks tks
-            if ntks > 0
-                then do
-                    rtks <- randPartialIPv6Addr ntks
-                    let tks' = concat [addColon tks,rtks]
-                    return $ if isIPv6Addr tks'
-                                 then ipv6TokensToIPv6Addr $ (toDoubleColon . fromDoubleColon) tks'
-                                 else Nothing
-                else return Nothing
-        Nothing  -> return Nothing
+    if t == T.empty
+        then do r <- randIPv6Addr
+                return $ Just r
+        else case maybeIPv6AddrTokens t of
+                 Just tks -> do
+                     ntks <- do
+                         let ctks = countChunks tks
+                         case snd ctks of
+                             0 -> return $ 8 - fst ctks
+                             1 -> return $ 6 - fst ctks
+                             _ -> return 0
+                     if ntks > 0
+                         then do
+                             rtks <- randPartialIPv6Addr ntks
+                             let tks' = addColon tks ++ rtks
+                             return $ if isIPv6Addr tks'
+                                          then ipv6TokensToIPv6Addr $ (toDoubleColon . fromDoubleColon) tks'
+                                          else Nothing
+                         else return Nothing
+                 Nothing  -> return Nothing
   where
     countChunks =
-        foldr oneMoreChunk 0
+        foldr count (0,0)
       where
-        oneMoreChunk s c = case s of
-                               SixteenBit _ -> c + 1
-                               AllZeros     -> c + 1
-                               _            -> c
-    addColon ts = case last ts of
-                      SixteenBit _ -> ts ++ [Colon]
-                      AllZeros     -> ts ++ [Colon]
-                      _            -> ts 
+        count c (a,b) =
+            case c of
+                SixteenBit _ -> (a+1,b)
+                AllZeros     -> (a+1,b)
+                DoubleColon  -> (a,b+1)
+                _            -> (a,b)
+    addColon ts =
+        case last ts of
+            SixteenBit _ -> ts ++ [Colon]
+            AllZeros     -> ts ++ [Colon]
+            _            -> ts 
