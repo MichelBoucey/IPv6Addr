@@ -25,6 +25,7 @@ module Text.IPv6Addr
     , toIP6ARPA
     , getIPv6AddrOf
     , randIPv6Addr
+    , randIPv6AddrWithPrefix
     ) where
 
 import Control.Applicative (pure,(<$>),(<*>))
@@ -99,9 +100,13 @@ toIPv6 a = read $ show a
 getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
 getIPv6AddrOf s = maybe Nothing (maybeIPv6Addr . T.pack . show) <$> (lookup s <$> networkInterfacesIPv6AddrList)
 
+-- | Returns a random 'IPv6Addr'.
+randIPv6Addr :: IO IPv6Addr
+randIPv6Addr = fromJust <$> randIPv6AddrWithPrefix Nothing
+
 -- | Returns a random 'IPv6Addr', optionally with the given prefix.
-randIPv6Addr :: Maybe T.Text -> IO (Maybe IPv6Addr)
-randIPv6Addr p =
+randIPv6AddrWithPrefix :: Maybe T.Text -> IO (Maybe IPv6Addr)
+randIPv6AddrWithPrefix p =
     if isNothing p
         then do
             r   <- randomRIO (1,8)
@@ -133,8 +138,9 @@ randIPv6Addr p =
                         rtks <- randPartialIPv6Addr ntks
                         let tks' = addColon tks ++ rtks
                         return $ if isIPv6Addr tks'
-                                     then ipv6TokensToIPv6Addr $ (toDoubleColon . fromDoubleColon) tks'
-                                     else Nothing
+                            then ipv6TokensToIPv6Addr $
+                                (toDoubleColon . fromDoubleColon) tks'
+                            else Nothing
                     else return Nothing
             Nothing  -> return Nothing
   where
