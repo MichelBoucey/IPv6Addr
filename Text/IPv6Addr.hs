@@ -25,12 +25,11 @@ module Text.IPv6Addr
     , toIP6ARPA
     , getIPv6AddrOf
     , randIPv6Addr
-    , randIPv6AddrWithPrefix
     ) where
 
 import Control.Applicative (pure,(<$>),(<*>))
 import Data.IP (IPv6)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust,isNothing)
 import qualified Data.Text as T
 import Network (HostName)
 import System.Random (randomRIO)
@@ -100,42 +99,44 @@ toIPv6 a = read $ show a
 getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
 getIPv6AddrOf s = maybe Nothing (maybeIPv6Addr . T.pack . show) <$> (lookup s <$> networkInterfacesIPv6AddrList)
 
--- | Returns a random 'IPv6Addr'.
-randIPv6Addr :: IO IPv6Addr
-randIPv6Addr = do
-    r   <- randomRIO (1,8)
-    tks <- case r of
-              8 -> randPartialIPv6Addr 8
-              _ -> do r' <- randomRIO (1,8-r)
-                      case r + r' of
-                          7 -> concat <$> sequence [randPartialIPv6Addr r,pure [Colon,AllZeros,Colon],randPartialIPv6Addr r']
-                          8 -> randPartialIPv6Addr 8
-                          _ -> concat <$> sequence [randPartialIPv6Addr r,pure [DoubleColon],randPartialIPv6Addr r']
-    return $ fromJust $ ipv6TokensToIPv6Addr tks
-
--- | Returns a random 'IPv6Addr' with the given prefix
-randIPv6AddrWithPrefix :: T.Text -> IO (Maybe IPv6Addr)
-randIPv6AddrWithPrefix t =
-    if t == T.empty
-        then do r <- randIPv6Addr
-                return $ Just r
-        else case maybeIPv6AddrTokens t of
-                 Just tks -> do
-                     ntks <- do
-                         let ctks = countChunks tks
-                         case snd ctks of
-                             0 -> return $ 8 - fst ctks
-                             1 -> return $ 6 - fst ctks
-                             _ -> return 0
-                     if ntks > 0
-                         then do
-                             rtks <- randPartialIPv6Addr ntks
-                             let tks' = addColon tks ++ rtks
-                             return $ if isIPv6Addr tks'
-                                          then ipv6TokensToIPv6Addr $ (toDoubleColon . fromDoubleColon) tks'
-                                          else Nothing
-                         else return Nothing
-                 Nothing  -> return Nothing
+-- | Returns a random 'IPv6Addr', optionally with the given prefix.
+randIPv6Addr :: Maybe T.Text -> IO (Maybe IPv6Addr)
+randIPv6Addr p =
+    if isNothing p
+        then do
+            r   <- randomRIO (1,8)
+            tks <- case r of
+                8 -> randPartialIPv6Addr 8
+                _ -> do
+                    r' <- randomRIO (1,8-r)
+                    case r + r' of
+                        7 -> concat <$> sequence [ randPartialIPv6Addr r
+                                                 , pure [Colon,AllZeros,Colon]
+                                                 , randPartialIPv6Addr r'
+                                                 ]
+                        8 -> randPartialIPv6Addr 8
+                        _ -> concat <$> sequence [ randPartialIPv6Addr r
+                                                 , pure [DoubleColon]
+                                                 , randPartialIPv6Addr r'
+                                                 ]
+            return $ ipv6TokensToIPv6Addr tks
+        else case maybeIPv6AddrTokens (fromJust p) of
+            Just tks -> do
+                ntks <- do
+                    let ctks = countChunks tks
+                    case snd ctks of
+                        0 -> return $ 8 - fst ctks
+                        1 -> return $ 6 - fst ctks
+                        _ -> return 0
+                if ntks > 0
+                    then do
+                        rtks <- randPartialIPv6Addr ntks
+                        let tks' = addColon tks ++ rtks
+                        return $ if isIPv6Addr tks'
+                                     then ipv6TokensToIPv6Addr $ (toDoubleColon . fromDoubleColon) tks'
+                                     else Nothing
+                    else return Nothing
+            Nothing  -> return Nothing
   where
     countChunks =
         foldr count (0,0)
