@@ -28,7 +28,8 @@ module Text.IPv6Addr
     , randIPv6AddrWithPrefix
     ) where
 
-import Control.Applicative (pure,(<$>),(<*>))
+-- import Control.Applicative (pure,(<$>),(<*>))
+import Control.Applicative (pure,(<$>))
 import Data.IP (IPv6)
 import Data.Maybe (fromJust,isNothing)
 import qualified Data.Text as T
@@ -98,13 +99,17 @@ toIPv6 a = read $ show a
 -- > getIPv6AddrOf "eth0"
 --
 getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
-getIPv6AddrOf s = maybe Nothing (maybeIPv6Addr . T.pack . show) <$> (lookup s <$> networkInterfacesIPv6AddrList)
+getIPv6AddrOf s = maybe Nothing (maybeIPv6Addr . T.pack . show) <$>
+                      (lookup s <$> networkInterfacesIPv6AddrList)
 
 -- | Returns a random 'IPv6Addr'.
 randIPv6Addr :: IO IPv6Addr
 randIPv6Addr = fromJust <$> randIPv6AddrWithPrefix Nothing
 
 -- | Returns a random 'IPv6Addr', optionally with the given prefix.
+--
+-- > randIPv6AddrWithPrefix (Just "4321:0:1:2:3:4")
+--
 randIPv6AddrWithPrefix :: Maybe T.Text -> IO (Maybe IPv6Addr)
 randIPv6AddrWithPrefix p =
     if isNothing p
@@ -115,24 +120,25 @@ randIPv6AddrWithPrefix p =
                 _ -> do
                     r' <- randomRIO (1,8-r)
                     case r + r' of
-                        7 -> concat <$> sequence [ randPartialIPv6Addr r
-                                                 , pure [Colon,AllZeros,Colon]
-                                                 , randPartialIPv6Addr r'
-                                                 ]
+                        7 -> concat <$>
+                                 sequence [ randPartialIPv6Addr r
+                                          , pure [Colon,AllZeros,Colon]
+                                          , randPartialIPv6Addr r'
+                                          ]
                         8 -> randPartialIPv6Addr 8
-                        _ -> concat <$> sequence [ randPartialIPv6Addr r
-                                                 , pure [DoubleColon]
-                                                 , randPartialIPv6Addr r'
-                                                 ]
+                        _ -> concat <$>
+                                 sequence [ randPartialIPv6Addr r
+                                          , pure [DoubleColon]
+                                          , randPartialIPv6Addr r'
+                                          ]
             return $ ipv6TokensToIPv6Addr tks
         else case maybeIPv6AddrTokens (fromJust p) of
-            Just tks -> do
-                ntks <- do
-                    let ctks = countChunks tks
-                    case snd ctks of
-                        0 -> return $ 8 - fst ctks
-                        1 -> return $ 6 - fst ctks
-                        _ -> return 0
+            Just tks -> do 
+                ntks <- do let ctks = countChunks tks
+                           case snd ctks of
+                               0 -> return $ 8 - fst ctks
+                               1 -> return $ 6 - fst ctks
+                               _ -> return 0
                 if ntks > 0
                     then do
                         rtks <- randPartialIPv6Addr ntks
