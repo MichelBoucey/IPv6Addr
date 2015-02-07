@@ -19,9 +19,11 @@ module Text.IPv6Addr
     , maybePureIPv6Addr
     , maybeFullIPv6Addr
     , sameIPv6Addr
+    -- * Conversions
     , fromIPv6Addr
     , toIPv6
     , toHostName
+    -- * Utils
     , toIP6ARPA
     , getIPv6AddrOf
     , randIPv6Addr
