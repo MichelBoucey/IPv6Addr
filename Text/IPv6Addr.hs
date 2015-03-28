@@ -83,10 +83,10 @@ sameIPv6Addr a b =
 --
 toIP6ARPA :: IPv6Addr -> T.Text
 toIP6ARPA a =
-    (T.reverse $ T.concatMap trans $ fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr a) <> "IP6.ARPA."
+    T.reverse (T.concatMap trans $ fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr a) <> "IP6.ARPA."
   where
     trans ':' = T.empty
-    trans c   = "." <> (T.pack [c])
+    trans c   = "." <> T.pack [c]
 
 -- | Given an 'IPv6Addr', returns the corresponding 'HostName'.
 toHostName :: IPv6Addr -> HostName
