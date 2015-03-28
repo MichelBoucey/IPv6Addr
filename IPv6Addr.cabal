@@ -13,6 +13,10 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
+Source-Repository head
+  Type: git
+  Location: https://github.com/MichelBoucey/IPv6Addr.git
+
 library
   exposed-modules:     Text.IPv6Addr, Text.IPv6Addr.Types, Text.IPv6Addr.Manip, Text.IPv6Addr.Internal
   -- other-modules:       
