@@ -32,6 +32,7 @@ module Text.IPv6Addr.Internal
 import Control.Monad (replicateM)
 import Data.Attoparsec.Text
 import Data.Char (isDigit,isHexDigit,toLower)
+import Data.Monoid ((<>))
 import Control.Applicative ((<|>),(<*))
 import Data.List (group,isSuffixOf,elemIndex,elemIndices,intersperse)
 import Numeric (showHex)
@@ -44,15 +45,15 @@ import Text.IPv6Addr.Types
 
 tok0 = "0"
 
--- | Returns the 'Text' of an IPv6 address.
+-- | Returns the 'T.Text' of an IPv6 address.
 fromIPv6Addr :: IPv6Addr -> T.Text
 fromIPv6Addr (IPv6Addr t) = t
 
--- | Given an arbitrary list of 'IPv6AddrToken', returns the corresponding 'Text'.
+-- | Given an arbitrary list of 'IPv6AddrToken', returns the corresponding 'T.Text'.
 ipv6TokensToText :: [IPv6AddrToken] -> T.Text
 ipv6TokensToText l = T.concat $ map ipv6TokenToText l
 
--- | Returns the corresponding 'Text' of an IPv6 address token.
+-- | Returns the corresponding 'T.Text' of an IPv6 address token.
 ipv6TokenToText :: IPv6AddrToken -> T.Text
 ipv6TokenToText (SixteenBit s) = s 
 ipv6TokenToText Colon = ":"
@@ -138,7 +139,7 @@ maybeTokPureIPv6Addr t = do
   where
     ipv4AddrReplacement ltks' = init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks')
 
--- | Tokenize a 'Text' into 'Just' a list of 'IPv6AddrToken', or 'Nothing'.
+-- | Tokenize a 'T.Text' into 'Just' a list of 'IPv6AddrToken', or 'Nothing'.
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 maybeIPv6AddrTokens s = 
     case readText s of
@@ -179,7 +180,7 @@ ipv4AddrRewrite tks =
     tokffff = "ffff"
     tok5efe = "5efe"
 
--- | Rewrites 'Just' an embedded 'IPv4Addr' into the corresponding list of pure 'IPv6Addr' tokens.
+-- | Rewrites an embedded 'IPv4Addr' into the corresponding list of pure 'IPv6Addr' tokens.
 --
 -- > ipv4AddrToIPv6AddrTokens (IPv4Addr "127.0.0.1") == [SixteenBits "7f0",Colon,SixteenBits "1"]
 --
@@ -188,13 +189,13 @@ ipv4AddrToIPv6AddrTokens t =
     case t of
         IPv4Addr a -> do
             let m = toHex a
-            [  SixteenBit ((!!) m 0 `T.append` addZero ((!!) m 1))
+            [  SixteenBit ((!!) m 0 <> addZero ((!!) m 1))
              , Colon
-             , SixteenBit ((!!) m 2 `T.append` addZero ((!!) m 3)) ]
+             , SixteenBit ((!!) m 2 <> addZero ((!!) m 3)) ]
         _          -> [t]
       where
         toHex a = map (\x -> T.pack $ showHex (read (T.unpack x)::Int) "") $ T.split (=='.') a
-        addZero d = if T.length d == 1 then tok0 `T.append` d else d
+        addZero d = if T.length d == 1 then tok0 <> d else d
 
 expandTokens :: [IPv6AddrToken] -> [IPv6AddrToken]
 expandTokens = map expandToken
