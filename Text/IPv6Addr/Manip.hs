@@ -51,9 +51,9 @@ randPartialIPv6Addr n
     | n > 0 && n < 9 = intersperse Colon <$> replicateM n (randIPv6AddrChunk "____")
     | otherwise      = return []
 
--- | Given a MAC address, returns the corresponding 'IPv6AddrToken' list, or an empty list.
+-- | Given a MAC address, returns 'Just' the corresponding 'IPv6AddrToken' list, or 'Nothing'.
 --
--- > macAddrToIPv6AddrTokens "fa:1d:58:cc:95:16" == [SixteenBit "fa1d",Colon,SixteenBit "58cc",Colon,SixteenBit "9516"]
+-- > macAddrToIPv6AddrTokens "fa:1d:58:cc:95:16" == Just [SixteenBit "fa1d",Colon,SixteenBit "58cc",Colon,SixteenBit "9516"]
 --
 macAddrToIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 macAddrToIPv6AddrTokens t =
