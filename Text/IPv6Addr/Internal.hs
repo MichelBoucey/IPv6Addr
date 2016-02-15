@@ -69,9 +69,9 @@ isIPv6Addr [DoubleColon,SixteenBit tok1] = True
 isIPv6Addr tks =
     diffNext tks && (do
         let cdctks = countDoubleColon tks
-        let lentks = length tks
-        let lasttk = last tks
-        let lenconst = (lentks == 15 && cdctks == 0) || (lentks < 15 && cdctks == 1)
+            lentks = length tks
+            lasttk = last tks
+            lenconst = (lentks == 15 && cdctks == 0) || (lentks < 15 && cdctks == 1)
         firstValidToken tks &&
             (case countIPv4Addr tks of
                 0 -> case lasttk of
@@ -82,7 +82,7 @@ isIPv6Addr tks =
                 1 -> case lasttk of
                          IPv4Addr _ -> (lentks == 13 && cdctks == 0) || (lentks < 12 && cdctks == 1)
                          _          -> False
-                otherwise -> False))
+                _ -> False))
           where diffNext [] = False
                 diffNext [_] = True
                 diffNext (t:ts) = do
@@ -110,7 +110,7 @@ countIPv4Addr = foldr oneMoreIPv4Addr 0
   where
     oneMoreIPv4Addr t c = case t of
                               IPv4Addr _ -> c + 1
-                              otherwise  -> c
+                              _          -> c
 
 -- | This is the main function which returns 'Just' the list of a tokenized IPv6
 -- address text representation validated against RFC 4291 and canonized
@@ -208,10 +208,10 @@ fromDoubleColon tks =
     if DoubleColon `notElem` tks
         then tks
         else do let s = splitAt (fromJust $ elemIndex DoubleColon tks) tks
-                let fsts = fst s
-                let snds = if not (null (snd s)) then tail(snd s) else []
-                let fste = if null fsts then [] else fsts ++ [Colon]
-                let snde = if null snds then [] else Colon : snds
+                    fsts = fst s
+                    snds = if not (null (snd s)) then tail(snd s) else []
+                    fste = if null fsts then [] else fsts ++ [Colon]
+                    snde = if null snds then [] else Colon : snds
                 fste ++ allZerosTokensReplacement(quantityOfAllZerosTokenToReplace tks) ++ snde
       where
         allZerosTokensReplacement x = intersperse Colon (replicate x AllZeros)
