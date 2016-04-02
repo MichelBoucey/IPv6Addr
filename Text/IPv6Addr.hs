@@ -30,18 +30,17 @@ module Text.IPv6Addr
     , randIPv6AddrWithPrefix
     ) where
 
--- import Control.Applicative (pure,(<$>),(<*>))
-import Control.Applicative (pure,(<$>))
-import Data.IP (IPv6)
-import Data.Maybe (fromJust,isNothing)
-import Data.Monoid ((<>))
-import qualified Data.Text as T
-import Network (HostName)
-import System.Random (randomRIO)
+import           Control.Applicative    (pure, (<$>))
+import           Data.IP                (IPv6)
+import           Data.Maybe             (fromJust, isNothing)
+import           Data.Monoid            ((<>))
+import qualified Data.Text              as T
+import           Network                (HostName)
+import           System.Random          (randomRIO)
 
-import Text.IPv6Addr.Internal
-import Text.IPv6Addr.Manip (randIPv6AddrChunk,randPartialIPv6Addr)
-import Text.IPv6Addr.Types
+import           Text.IPv6Addr.Internal
+import           Text.IPv6Addr.Manip    (randIPv6AddrChunk, randPartialIPv6Addr)
+import           Text.IPv6Addr.Types
 
 instance Eq IPv6Addr where
     (==) (IPv6Addr a) (IPv6Addr b) = show (maybePureIPv6Addr a) == show (maybePureIPv6Addr b)
@@ -136,7 +135,7 @@ randIPv6AddrWithPrefix p =
                                           ]
             return $ ipv6TokensToIPv6Addr tks
         else case maybeIPv6AddrTokens (fromJust p) of
-            Just tks -> do 
+            Just tks -> do
                 ntks <- do let ctks = countChunks tks
                            case snd ctks of
                                0 -> return $ 8 - fst ctks
@@ -166,4 +165,4 @@ randIPv6AddrWithPrefix p =
         case last ts of
             SixteenBit _ -> ts ++ [Colon]
             AllZeros     -> ts ++ [Colon]
-            _            -> ts 
+            _            -> ts

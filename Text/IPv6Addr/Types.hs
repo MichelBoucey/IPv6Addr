@@ -1,16 +1,3 @@
--- -----------------------------------------------------------------------------
-
--- |
--- Module      :  Text.IPv6Addr
--- Copyright   :  Copyright © Michel Boucey 2011-2015
--- License     :  BSD-Style
--- Maintainer  :  michel.boucey@gmail.com
---
--- Dealing with IPv6 address text representations, canonization and manipulations.
---
-
--- -----------------------------------------------------------------------------
-
 module Text.IPv6Addr.Types where
 
 import qualified Data.Text as T

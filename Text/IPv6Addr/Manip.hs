@@ -1,16 +1,3 @@
--- -----------------------------------------------------------------------------
-
--- |
--- Module      :  Text.IPv6Addr
--- Copyright   :  Copyright © Michel Boucey 2011-2015
--- License     :  BSD-Style
--- Maintainer  :  michel.boucey@gmail.com
---
--- Dealing with IPv6 address text representations, canonization and manipulations.
---
-
--- -----------------------------------------------------------------------------
-
 module Text.IPv6Addr.Manip
     ( randIPv6AddrChunk
     , randPartialIPv6Addr
@@ -19,24 +6,24 @@ module Text.IPv6Addr.Manip
     , getTokMacAddrOf
     ) where
 
-import Control.Applicative ((<$>))
-import Control.Monad (replicateM)
-import Data.Attoparsec.Text as A
-import Data.Char (intToDigit,isHexDigit)
-import Data.List (intersperse)
-import Data.Maybe (fromJust)
-import qualified Data.Text as T
-import Network.Info
-import System.Random (randomRIO)
+import           Control.Applicative    ((<$>))
+import           Control.Monad          (replicateM)
+import           Data.Attoparsec.Text   as A
+import           Data.Char              (intToDigit, isHexDigit)
+import           Data.List              (intersperse)
+import           Data.Maybe             (fromJust)
+import qualified Data.Text              as T
+import           Network.Info
+import           System.Random          (randomRIO)
 
-import Text.IPv6Addr.Internal
-import Text.IPv6Addr.Types
+import           Text.IPv6Addr.Internal
+import           Text.IPv6Addr.Types
 
 -- | Returns 'Just' a random 'SixteenBit' token based on a mask \"____\", each
 -- underscore being replaced by a random hexadecimal digit.
 --
 -- > randIPv6AddrChunk "_f__" == Just (SixteenBit "bfd4")
--- 
+--
 randIPv6AddrChunk :: String -> IO IPv6AddrToken
 randIPv6AddrChunk m =
     mapM getHex m >>= \g -> return $ SixteenBit $ T.dropWhile (=='0') $ T.pack g
@@ -82,5 +69,5 @@ getTokMacAddrOf :: String -> IO (Maybe [IPv6AddrToken])
 getTokMacAddrOf s =
     maybe Nothing (macAddrToIPv6AddrTokens . T.pack . show) <$> (lookup s <$> networkInterfacesMacAddrList)
   where
-    networkInterfacesMacAddrList = getNetworkInterfaces >>= \n -> return $ map networkInterfacesMac n 
+    networkInterfacesMacAddrList = getNetworkInterfaces >>= \n -> return $ map networkInterfacesMac n
       where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)

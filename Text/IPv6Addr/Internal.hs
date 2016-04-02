@@ -1,16 +1,3 @@
--- -----------------------------------------------------------------------------
-
--- | 
--- Module      :  Text.IPv6Addr
--- Copyright   :  Copyright © Michel Boucey 2011-2015
--- License     :  BSD-Style
--- Maintainer  :  michel.boucey@gmail.com
---
--- Dealing with IPv6 address text representations, canonization and manipulations.
---
-
--- -----------------------------------------------------------------------------
-
 {-# LANGUAGE OverloadedStrings #-}
 
 module Text.IPv6Addr.Internal
@@ -29,19 +16,20 @@ module Text.IPv6Addr.Internal
     , networkInterfacesIPv6AddrList
     ) where
 
-import Control.Monad (replicateM)
-import Data.Attoparsec.Text
-import Data.Char (isDigit,isHexDigit,toLower)
-import Data.Monoid ((<>))
-import Control.Applicative ((<|>),(<*))
-import Data.List (group,isSuffixOf,elemIndex,elemIndices,intersperse)
-import Numeric (showHex)
-import qualified Data.Text as T
-import qualified Data.Text.Read as R (decimal)
-import Data.Maybe (fromJust)
-import Network.Info
+import           Control.Applicative  ((<*), (<|>))
+import           Control.Monad        (replicateM)
+import           Data.Attoparsec.Text
+import           Data.Char            (isDigit, isHexDigit, toLower)
+import           Data.List            (elemIndex, elemIndices, group,
+                                       intersperse, isSuffixOf)
+import           Data.Maybe           (fromJust)
+import           Data.Monoid          ((<>))
+import qualified Data.Text            as T
+import qualified Data.Text.Read       as R (decimal)
+import           Network.Info
+import           Numeric              (showHex)
 
-import Text.IPv6Addr.Types
+import           Text.IPv6Addr.Types
 
 tok0 = "0"
 
@@ -55,7 +43,7 @@ ipv6TokensToText l = T.concat $ map ipv6TokenToText l
 
 -- | Returns the corresponding 'T.Text' of an IPv6 address token.
 ipv6TokenToText :: IPv6AddrToken -> T.Text
-ipv6TokenToText (SixteenBit s) = s 
+ipv6TokenToText (SixteenBit s) = s
 ipv6TokenToText Colon = ":"
 ipv6TokenToText DoubleColon = "::"
 ipv6TokenToText AllZeros = tok0 -- "A single 16-bit 0000 field MUST be represented as 0" (RFC 5952, 4.1)
@@ -97,7 +85,7 @@ isIPv6Addr tks =
                                             AllZeros     -> False
                                             _            -> diffNext ts
                         _            -> diffNext ts
-                firstValidToken l = 
+                firstValidToken l =
                     case head l of
                         SixteenBit _ -> True
                         DoubleColon  -> True
@@ -106,17 +94,19 @@ isIPv6Addr tks =
                 countDoubleColon l = length $ elemIndices DoubleColon l
                 tok1 = "1"
 
-countIPv4Addr = foldr oneMoreIPv4Addr 0
+countIPv4Addr =
+    foldr oneMoreIPv4Addr 0
   where
-    oneMoreIPv4Addr t c = case t of
-                              IPv4Addr _ -> c + 1
-                              _          -> c
+    oneMoreIPv4Addr t c =
+      case t of
+          IPv4Addr _ -> c + 1
+          _          -> c
 
 -- | This is the main function which returns 'Just' the list of a tokenized IPv6
 -- address text representation validated against RFC 4291 and canonized
 -- in conformation with RFC 5952, or 'Nothing'.
 maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
-maybeTokIPv6Addr t = 
+maybeTokIPv6Addr t =
     case maybeIPv6AddrTokens t of
         Just ltks -> if isIPv6Addr ltks
                          then Just $ (ipv4AddrReplacement . toDoubleColon . fromDoubleColon) ltks
@@ -141,7 +131,7 @@ maybeTokPureIPv6Addr t = do
 
 -- | Tokenize a 'T.Text' into 'Just' a list of 'IPv6AddrToken', or 'Nothing'.
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
-maybeIPv6AddrTokens s = 
+maybeIPv6AddrTokens s =
     case readText s of
          Done r l -> if r==T.empty then Just l else Nothing
          Fail {}  -> Nothing
@@ -204,7 +194,7 @@ expandTokens = map expandToken
         expandToken t = t
 
 fromDoubleColon :: [IPv6AddrToken] -> [IPv6AddrToken]
-fromDoubleColon tks = 
+fromDoubleColon tks =
     if DoubleColon `notElem` tks
         then tks
         else do let s = splitAt (fromJust $ elemIndex DoubleColon tks) tks
@@ -293,10 +283,10 @@ ipv4Addr = do
                                 then do n4 <- manyDigits
                                         if n4 /= T.empty
                                             then return $ IPv4Addr $ T.intercalate "." [n1,n2,n3,n4]
-                                            else parserFailure  
-                                else parserFailure  
-                    else parserFailure  
-        else parserFailure  
+                                            else parserFailure
+                                else parserFailure
+                    else parserFailure
+        else parserFailure
   where
     parserFailure = fail "ipv4Addr parsing failure"
     manyDigits = do
