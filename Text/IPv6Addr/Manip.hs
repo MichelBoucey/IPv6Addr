@@ -6,12 +6,10 @@ module Text.IPv6Addr.Manip
     , getTokMacAddrOf
     ) where
 
-import           Control.Applicative    ((<$>))
 import           Control.Monad          (replicateM)
 import           Data.Attoparsec.Text   as A
-import           Data.Char              (intToDigit, isHexDigit)
+import           Data.Char              (intToDigit)
 import           Data.List              (intersperse)
-import           Data.Maybe             (fromJust)
 import qualified Data.Text              as T
 import           Network.Info
 import           System.Random          (randomRIO)
@@ -71,3 +69,4 @@ getTokMacAddrOf s =
   where
     networkInterfacesMacAddrList = getNetworkInterfaces >>= \n -> return $ map networkInterfacesMac n
       where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
+

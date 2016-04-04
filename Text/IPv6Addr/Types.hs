@@ -14,3 +14,4 @@ data IPv6AddrToken
     | DoubleColon        -- ^ A double-colon stands for a unique compression of many consecutive 16-Bit chunks
     | IPv4Addr T.Text    -- ^ An embedded IPv4 address as representation of the last 32-Bit
     deriving (Eq,Show)
+

@@ -1,16 +1,5 @@
--- -----------------------------------------------------------------------------
-
--- Module      :  Text.IPv6Addr
--- Copyright   :  Copyright © Michel Boucey 2011-2015
--- License     :  BSD-style
--- Maintainer  :  michel.boucey@gmail.com
---
--- Dealing with IPv6 address text representations, canonization and manipulations.
---
-
--- -----------------------------------------------------------------------------
-
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Text.IPv6Addr
     (
@@ -30,7 +19,6 @@ module Text.IPv6Addr
     , randIPv6AddrWithPrefix
     ) where
 
-import           Control.Applicative    (pure, (<$>))
 import           Data.IP                (IPv6)
 import           Data.Maybe             (fromJust, isNothing)
 import           Data.Monoid            ((<>))
@@ -39,7 +27,7 @@ import           Network                (HostName)
 import           System.Random          (randomRIO)
 
 import           Text.IPv6Addr.Internal
-import           Text.IPv6Addr.Manip    (randIPv6AddrChunk, randPartialIPv6Addr)
+import           Text.IPv6Addr.Manip    (randPartialIPv6Addr)
 import           Text.IPv6Addr.Types
 
 instance Eq IPv6Addr where
@@ -137,7 +125,7 @@ randIPv6AddrWithPrefix p =
         else case maybeIPv6AddrTokens (fromJust p) of
             Just tks -> do
                 ntks <- do let ctks = countChunks tks
-                           case snd ctks of
+                           case (snd ctks :: Int) of
                                0 -> return $ 8 - fst ctks
                                1 -> return $ 6 - fst ctks
                                _ -> return 0
@@ -166,3 +154,4 @@ randIPv6AddrWithPrefix p =
             SixteenBit _ -> ts ++ [Colon]
             AllZeros     -> ts ++ [Colon]
             _            -> ts
+

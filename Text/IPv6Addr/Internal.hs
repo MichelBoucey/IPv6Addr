@@ -16,10 +16,9 @@ module Text.IPv6Addr.Internal
     , networkInterfacesIPv6AddrList
     ) where
 
-import           Control.Applicative  ((<*), (<|>))
-import           Control.Monad        (replicateM)
+import           Control.Applicative  ((<|>))
 import           Data.Attoparsec.Text
-import           Data.Char            (isDigit, isHexDigit, toLower)
+import           Data.Char            (isDigit)
 import           Data.List            (elemIndex, elemIndices, group,
                                        intersperse, isSuffixOf)
 import           Data.Maybe           (fromJust)
@@ -30,8 +29,6 @@ import           Network.Info
 import           Numeric              (showHex)
 
 import           Text.IPv6Addr.Types
-
-tok0 = "0"
 
 -- | Returns the 'T.Text' of an IPv6 address.
 fromIPv6Addr :: IPv6Addr -> T.Text
@@ -46,14 +43,14 @@ ipv6TokenToText :: IPv6AddrToken -> T.Text
 ipv6TokenToText (SixteenBit s) = s
 ipv6TokenToText Colon = ":"
 ipv6TokenToText DoubleColon = "::"
-ipv6TokenToText AllZeros = tok0 -- "A single 16-bit 0000 field MUST be represented as 0" (RFC 5952, 4.1)
+ipv6TokenToText AllZeros = "0" -- "A single 16-bit 0000 field MUST be represented as 0" (RFC 5952, 4.1)
 ipv6TokenToText (IPv4Addr a) = a
 
 -- | Returns 'True' if a list of 'IPv6AddrToken' constitutes a valid IPv6 Address.
 isIPv6Addr :: [IPv6AddrToken] -> Bool
 isIPv6Addr [] = False
 isIPv6Addr [DoubleColon] = True
-isIPv6Addr [DoubleColon,SixteenBit tok1] = True
+isIPv6Addr [DoubleColon,SixteenBit "1"] = True
 isIPv6Addr tks =
     diffNext tks && (do
         let cdctks = countDoubleColon tks
@@ -61,7 +58,7 @@ isIPv6Addr tks =
             lasttk = last tks
             lenconst = (lentks == 15 && cdctks == 0) || (lentks < 15 && cdctks == 1)
         firstValidToken tks &&
-            (case countIPv4Addr tks of
+            (case countIPv4Addr tks :: Int of
                 0 -> case lasttk of
                          SixteenBit _ -> lenconst
                          DoubleColon  -> lenconst
@@ -92,8 +89,8 @@ isIPv6Addr tks =
                         AllZeros     -> True
                         _            -> False
                 countDoubleColon l = length $ elemIndices DoubleColon l
-                tok1 = "1"
 
+countIPv4Addr :: [IPv6AddrToken] -> Int
 countIPv4Addr =
     foldr oneMoreIPv4Addr 0
   where
@@ -135,8 +132,9 @@ maybeIPv6AddrTokens s =
     case readText s of
          Done r l -> if r==T.empty then Just l else Nothing
          Fail {}  -> Nothing
+         Partial _ -> Nothing
   where
-    readText s = feed (parse (many1 $ ipv4Addr <|> sixteenBit <|> doubleColon <|> colon) s) T.empty
+    readText _s = feed (parse (many1 $ ipv4Addr <|> sixteenBit <|> doubleColon <|> colon) _s) T.empty
 
 -- | An embedded IPv4 address have to be rewritten to output a pure IPv6 Address
 -- text representation in hexadecimal digits. But some well-known prefixed IPv6
@@ -185,7 +183,7 @@ ipv4AddrToIPv6AddrTokens t =
         _          -> [t]
       where
         toHex a = map (\x -> T.pack $ showHex (read (T.unpack x)::Int) "") $ T.split (=='.') a
-        addZero d = if T.length d == 1 then tok0 <> d else d
+        addZero d = if T.length d == 1 then "0" <> d else d
 
 expandTokens :: [IPv6AddrToken] -> [IPv6AddrToken]
 expandTokens = map expandToken
@@ -205,10 +203,10 @@ fromDoubleColon tks =
                 fste ++ allZerosTokensReplacement(quantityOfAllZerosTokenToReplace tks) ++ snde
       where
         allZerosTokensReplacement x = intersperse Colon (replicate x AllZeros)
-        quantityOfAllZerosTokenToReplace x =
-            ntks tks - foldl (\c x -> if (x /= DoubleColon) && (x /= Colon) then c+1 else c) 0 x
+        quantityOfAllZerosTokenToReplace _x =
+            ntks tks - foldl (\c _x -> if (_x /= DoubleColon) && (_x /= Colon) then c+1 else c) 0 _x
           where
-            ntks tks = if countIPv4Addr tks == 1 then 7 else 8
+            ntks _tks = if countIPv4Addr _tks == 1 then 7 else 8
 
 toDoubleColon :: [IPv6AddrToken] -> [IPv6AddrToken]
 toDoubleColon tks =
@@ -229,7 +227,7 @@ toDoubleColon tks =
         firstLongestZerosRunIndex x y = sum . snd . unzip $ Prelude.takeWhile (/=(True,y)) x
         longestLengthZerosRun x =
             maximum $ map longest x
-          where longest t = case t of
+          where longest _t = case _t of
                                 (True,i)  -> i
                                 _         -> 0
     zerosRunsList x = map helper $ groupZerosRuns x
@@ -245,12 +243,6 @@ networkInterfacesIPv6AddrList =
     getNetworkInterfaces >>= \n -> return $ map networkInterfacesIPv6Addr n
   where
     networkInterfacesIPv6Addr (NetworkInterface n _ a _) = (n,a)
-
-fullSixteenBit :: T.Text -> Maybe IPv6AddrToken
-fullSixteenBit t =
-    case parse ipv6AddrFullChunk t of
-        Done a b  -> if a==T.empty then Just $ SixteenBit $ T.pack b else Nothing
-        _         -> Nothing
 
 macAddr :: Parser (Maybe [IPv6AddrToken])
 macAddr = do
@@ -291,18 +283,18 @@ ipv4Addr = do
     parserFailure = fail "ipv4Addr parsing failure"
     manyDigits = do
       ds <- takeWhile1 isDigit
-      case R.decimal ds of
+      case R.decimal ds :: Either String (Integer, T.Text) of
           Right (n,_) -> return (if n < 256 then T.pack $ show n else T.empty)
           Left  _     -> return T.empty
 
 doubleColon :: Parser IPv6AddrToken
 doubleColon = do
-    string "::"
+    _ <- string "::"
     return DoubleColon
 
 colon :: Parser IPv6AddrToken
 colon = do
-    string ":"
+    _ <- string ":"
     return Colon
 
 ipv6AddrFullChunk :: Parser String
@@ -310,3 +302,4 @@ ipv6AddrFullChunk = count 4 hexaChar
 
 hexaChar :: Parser Char
 hexaChar = satisfy (inClass "0-9a-fA-F")
+
