@@ -14,6 +14,7 @@ module Text.IPv6Addr
     , toHostName
     -- * Utils
     , toIP6ARPA
+    , toUNC
     , getIPv6AddrOf
     , randIPv6Addr
     , randIPv6AddrWithPrefix
@@ -74,6 +75,17 @@ toIP6ARPA a =
   where
     trans ':' = T.empty
     trans c   = "." <> T.pack [c]
+
+-- | Returns the Windows UNC path name of the given IPv6 Address.
+--
+-- > toUNC (IPv6Addr "2001:0DB8:002a:1005:230:48ff:fe73:989d") == "2001-db8-2a-1005-230-48ff-fe73-989d.ipv6-literal.net"
+--
+toUNC :: IPv6Addr -> T.Text
+toUNC a =
+    T.concatMap trans $ fromIPv6Addr $ fromJust $ maybePureIPv6Addr $ fromIPv6Addr a <> ".ipv6-literal.net"
+  where
+    trans ':' = "-"
+    trans c   = T.pack [c]
 
 -- | Given an 'IPv6Addr', returns the corresponding 'HostName'.
 toHostName :: IPv6Addr -> HostName

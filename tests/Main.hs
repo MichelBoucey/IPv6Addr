@@ -2,16 +2,16 @@
 
 module Main where
  
-import Data.Maybe
-import Data.Text
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit
 
 import Text.IPv6Addr
 
+main :: IO ()
 main = defaultMain $ hUnitTestToTests tests
 
+tests :: Test.HUnit.Test
 tests = TestList
   [ (~?=) (maybeIPv6Addr ":") Nothing
   , (~?=) (maybeIPv6Addr "::") (Just (IPv6Addr "::"))
@@ -100,4 +100,6 @@ tests = TestList
   , (~?=) (toIP6ARPA (IPv6Addr "fdda:5cc1:23:4::1f")) "f.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.4.0.0.0.3.2.0.0.1.c.c.5.a.d.d.f.IP6.ARPA."
   , (~?=) (toIP6ARPA (IPv6Addr "2001:db8::")) "0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.IP6.ARPA."
   , (~?=) (toIP6ARPA (IPv6Addr "4321:0:1:2:3:4:567:89ab")) "b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.IP6.ARPA."
+  , (~?=) (toUNC (IPv6Addr "2001:0DB8:002a:1005:230:48ff:FE73:989d")) "2001-db8-2a-1005-230-48ff-fe73-989d.ipv6-literal.net"
+  , (~?=) (toUNC (IPv6Addr "2001:0db8:85a3:0000:0000:8a2e:0370:7334")) "2001-db8-85a3--8a2e-370-7334.ipv6-literal.net"
   ]
