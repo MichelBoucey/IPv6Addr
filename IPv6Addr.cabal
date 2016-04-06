@@ -7,7 +7,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Michel Boucey
 maintainer:          michel.boucey@gmail.com
-copyright:           Copyright (c) 2011-2015 - Michel Boucey
+copyright:           Copyright (c) 2011-2016 - Michel Boucey
 category:            Network
 build-type:          Simple
 extra-source-files:  README.md
