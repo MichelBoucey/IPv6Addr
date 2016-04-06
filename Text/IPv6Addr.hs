@@ -82,7 +82,7 @@ toIP6ARPA a =
 --
 toUNC :: IPv6Addr -> T.Text
 toUNC a =
-    T.concatMap trans $ fromIPv6Addr $ fromJust $ maybePureIPv6Addr $ fromIPv6Addr a <> ".ipv6-literal.net"
+    (T.concatMap trans $ fromIPv6Addr $ fromJust $ maybePureIPv6Addr $ fromIPv6Addr a) <> ".ipv6-literal.net"
   where
     trans ':' = "-"
     trans c   = T.pack [c]
