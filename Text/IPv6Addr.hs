@@ -12,9 +12,9 @@ module Text.IPv6Addr
     , fromIPv6Addr
     , toIPv6
     , toHostName
-    -- * Utils
     , toIP6ARPA
     , toUNC
+    -- * Utils
     , getIPv6AddrOf
     , randIPv6Addr
     , randIPv6AddrWithPrefix
