@@ -106,9 +106,10 @@ countIPv4Addr =
 maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokIPv6Addr t =
     case maybeIPv6AddrTokens t of
-        Just ltks -> if isIPv6Addr ltks
-                         then Just $ (ipv4AddrReplacement . toDoubleColon . fromDoubleColon) ltks
-                         else Nothing
+        Just ltks ->
+            if isIPv6Addr ltks
+                then Just $ (ipv4AddrReplacement . toDoubleColon . fromDoubleColon) ltks
+                else Nothing
         Nothing   -> Nothing
   where
     ipv4AddrReplacement ltks =
@@ -212,7 +213,6 @@ toDoubleColon :: [IPv6AddrToken] -> [IPv6AddrToken]
 toDoubleColon tks =
     zerosToDoubleColon tks (zerosRunToReplace $ zerosRunsList tks)
   where
-    zerosToDoubleColon :: [IPv6AddrToken] -> (Int,Int) -> [IPv6AddrToken]
     -- No all zeros token, so no double colon replacement...
     zerosToDoubleColon ls (_,0) = ls
     -- "The symbol '::' MUST NOT be used to shorten just one 16-bit 0 field" (RFC 5952 4.2.2)
@@ -227,9 +227,11 @@ toDoubleColon tks =
         firstLongestZerosRunIndex x y = sum . snd . unzip $ Prelude.takeWhile (/=(True,y)) x
         longestLengthZerosRun x =
             maximum $ map longest x
-          where longest _t = case _t of
-                                (True,i)  -> i
-                                _         -> 0
+          where
+            longest _t =
+                case _t of
+                    (True,i)  -> i
+                    _         -> 0
     zerosRunsList x = map helper $ groupZerosRuns x
       where
         helper h = (head h == AllZeros, lh) where lh = length h
@@ -267,24 +269,19 @@ sixteenBit = do
 ipv4Addr :: Parser IPv6AddrToken
 ipv4Addr = do
     n1 <- manyDigits <* "."
-    if n1 /= T.empty
-        then do n2 <- manyDigits <* "."
-                if n2 /= T.empty
-                    then do n3 <- manyDigits <* "."
-                            if n3 /= T.empty
-                                then do n4 <- manyDigits
-                                        if n4 /= T.empty
-                                            then return $ IPv4Addr $ T.intercalate "." [n1,n2,n3,n4]
-                                            else parserFailure
-                                else parserFailure
-                    else parserFailure
-        else parserFailure
+    guard (n1 /= T.empty)
+    n2 <- manyDigits <* "."
+    guard (n2 /= T.empty)
+    n3 <- manyDigits <* "."
+    guard (n3 /= T.empty)
+    n4 <- manyDigits
+    guard (n4 /= T.empty)
+    return $ IPv4Addr $ T.intercalate "." [n1,n2,n3,n4]
   where
-    parserFailure = fail "ipv4Addr parsing failure"
     manyDigits = do
       ds <- takeWhile1 isDigit
       case R.decimal ds :: Either String (Integer, T.Text) of
-          Right (n,_) -> return (if n < 256 then T.pack $ show n else T.empty)
+          Right (n,_) -> return $ if n < 256 then T.pack $ show n else T.empty
           Left  _     -> return T.empty
 
 doubleColon :: Parser IPv6AddrToken
