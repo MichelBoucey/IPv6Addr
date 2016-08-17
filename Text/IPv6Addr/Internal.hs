@@ -17,6 +17,7 @@ module Text.IPv6Addr.Internal
     ) where
 
 import           Control.Applicative  ((<|>))
+import           Control.Monad        (guard)
 import           Data.Attoparsec.Text
 import           Data.Char            (isDigit)
 import           Data.List            (elemIndex, elemIndices, group,
@@ -120,9 +121,8 @@ maybeTokIPv6Addr t =
 maybeTokPureIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokPureIPv6Addr t = do
     ltks <- maybeIPv6AddrTokens t
-    if isIPv6Addr ltks
-        then Just $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks
-        else Nothing
+    guard (isIPv6Addr ltks)
+    return $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks
   where
     ipv4AddrReplacement ltks' = init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks')
 
