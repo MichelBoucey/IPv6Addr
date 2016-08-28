@@ -106,10 +106,9 @@ countIPv4Addr =
 maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokIPv6Addr t =
     case maybeIPv6AddrTokens t of
-        Just ltks ->
-            if isIPv6Addr ltks
-                then Just $ (ipv4AddrReplacement . toDoubleColon . fromDoubleColon) ltks
-                else Nothing
+        Just ltks -> do
+             guard (isIPv6Addr ltks)
+             Just $ (ipv4AddrReplacement . toDoubleColon . fromDoubleColon) ltks
         Nothing   -> Nothing
   where
     ipv4AddrReplacement ltks =
@@ -131,8 +130,8 @@ maybeTokPureIPv6Addr t = do
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 maybeIPv6AddrTokens s =
     case readText s of
-         Done r l -> if r==T.empty then Just l else Nothing
-         Fail {}  -> Nothing
+         Done r l  -> if r==T.empty then Just l else Nothing
+         Fail {}   -> Nothing
          Partial _ -> Nothing
   where
     readText _s = feed (parse (many1 $ ipv4Addr <|> sixteenBit <|> doubleColon <|> colon) _s) T.empty

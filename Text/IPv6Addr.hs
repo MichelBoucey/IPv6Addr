@@ -8,22 +8,26 @@ module Text.IPv6Addr
     , maybePureIPv6Addr
     , maybeFullIPv6Addr
     , sameIPv6Addr
+
     -- * Conversions
     , fromIPv6Addr
     , toIPv6
     , toHostName
     , toIP6ARPA
     , toUNC
+
     -- * Utils
     , getIPv6AddrOf
     , randIPv6Addr
     , randIPv6AddrWithPrefix
+
     ) where
 
 import           Data.IP                (IPv6)
 import           Data.Maybe             (fromJust, isNothing)
 import           Data.Monoid            ((<>))
 import qualified Data.Text              as T
+import           Control.Monad          (guard)
 import           Network                (HostName)
 import           System.Random          (randomRIO)
 
@@ -141,15 +145,12 @@ randIPv6AddrWithPrefix p =
                                0 -> return $ 8 - fst ctks
                                1 -> return $ 6 - fst ctks
                                _ -> return 0
-                if ntks > 0
-                    then do
-                        rtks <- randPartialIPv6Addr ntks
-                        let tks' = addColon tks ++ rtks
-                        return $ if isIPv6Addr tks'
-                            then ipv6TokensToIPv6Addr $
-                                (toDoubleColon . fromDoubleColon) tks'
-                            else Nothing
-                    else return Nothing
+                guard (ntks > 0)
+                rtks <- randPartialIPv6Addr ntks
+                let tks' = addColon tks ++ rtks
+                guard (isIPv6Addr tks')
+                return $ ipv6TokensToIPv6Addr
+                       $ (toDoubleColon . fromDoubleColon) tks'
             Nothing  -> return Nothing
   where
     countChunks =
