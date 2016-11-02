@@ -24,7 +24,7 @@ import           Text.IPv6Addr.Types
 --
 randIPv6AddrChunk :: String -> IO IPv6AddrToken
 randIPv6AddrChunk m =
-    mapM getHex m >>= \g -> return $ SixteenBit $ T.dropWhile (=='0') $ T.pack g
+  mapM getHex m >>= \g -> return $ SixteenBit $ T.dropWhile (=='0') $ T.pack g
   where
     getHex c
         | c == '_'  = intToDigit <$> randomRIO (0,15)
@@ -33,8 +33,8 @@ randIPv6AddrChunk m =
 -- | Generates a random partial 'IPv6Addr' with n 'SixteenBit'
 randPartialIPv6Addr :: Int -> IO [IPv6AddrToken]
 randPartialIPv6Addr n
-    | n > 0 && n < 9 = intersperse Colon <$> replicateM n (randIPv6AddrChunk "____")
-    | otherwise      = return []
+  | n > 0 && n < 9 = intersperse Colon <$> replicateM n (randIPv6AddrChunk "____")
+  | otherwise      = return []
 
 -- | Given a MAC address, returns 'Just' the corresponding 'IPv6AddrToken' list, or 'Nothing'.
 --
@@ -42,9 +42,11 @@ randPartialIPv6Addr n
 --
 macAddrToIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 macAddrToIPv6AddrTokens t =
-    case parse macAddr t of
-        Done a b -> if a == T.empty then intersperse Colon <$> b else Nothing
-        _        -> Nothing
+  case parse macAddr t of
+    Done a b -> if a == T.empty
+                  then intersperse Colon <$> b
+                  else Nothing
+    _        -> Nothing
 
 --
 -- Functions based upon Network.Info to get local MAC and IPv6 addresses.
@@ -55,7 +57,8 @@ macAddrToIPv6AddrTokens t =
 -- > getTokIPv6AddrOf "eth0" == Just [SixteenBit "fe80",DoubleColon,SixteenBit "fa1d",Colon,SixteenBit "58cc",Colon,SixteenBit "9516"]
 --
 getTokIPv6AddrOf :: String -> IO (Maybe [IPv6AddrToken])
-getTokIPv6AddrOf s = maybe Nothing (maybeTokIPv6Addr. T.pack . show) <$> (lookup s <$> networkInterfacesIPv6AddrList)
+getTokIPv6AddrOf s = maybe Nothing (maybeTokIPv6Addr. T.pack . show) <$>
+                       (lookup s <$> networkInterfacesIPv6AddrList)
 
 -- | Given a valid name of a local network interface,
 -- returns 'Just' the corresponding list of 'IPv6AddrToken' of the interface's MAC Address,
@@ -65,7 +68,8 @@ getTokIPv6AddrOf s = maybe Nothing (maybeTokIPv6Addr. T.pack . show) <$> (lookup
 --
 getTokMacAddrOf :: String -> IO (Maybe [IPv6AddrToken])
 getTokMacAddrOf s =
-    maybe Nothing (macAddrToIPv6AddrTokens . T.pack . show) <$> (lookup s <$> networkInterfacesMacAddrList)
+  maybe Nothing (macAddrToIPv6AddrTokens . T.pack . show) <$>
+    (lookup s <$> networkInterfacesMacAddrList)
   where
     networkInterfacesMacAddrList = getNetworkInterfaces >>= \n -> return $ map networkInterfacesMac n
       where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
