@@ -5,7 +5,7 @@ import qualified Data.Text as T
 data IPv6Addr = IPv6Addr !T.Text
 
 instance Show IPv6Addr where
-  show (IPv6Addr addr) = T.unpack addr
+  show (IPv6Addr a) = T.unpack a
 
 data IPv6AddrToken
   = SixteenBit !T.Text  -- ^ A four hexadecimal digits group representing a 16-Bit chunk

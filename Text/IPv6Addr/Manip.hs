@@ -43,9 +43,10 @@ randPartialIPv6Addr n
 macAddrToIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 macAddrToIPv6AddrTokens t =
   case parse macAddr t of
-    Done a b -> if a == T.empty
-                  then intersperse Colon <$> b
-                  else Nothing
+    Done a b ->
+      if a == T.empty
+        then intersperse Colon <$> b
+        else Nothing
     _        -> Nothing
 
 --
