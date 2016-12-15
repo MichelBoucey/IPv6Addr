@@ -30,10 +30,11 @@ randIPv6AddrChunk m =
         | c == '_'  = intToDigit <$> randomRIO (0,15)
         | otherwise = return c
 
--- | Generates a random partial 'IPv6Addr' with n 'SixteenBit'
+-- | Generates a random partial 'IPv6Addr' with n 'SixteenBit'.
 randPartialIPv6Addr :: Int -> IO [IPv6AddrToken]
 randPartialIPv6Addr n
-  | n > 0 && n < 9 = intersperse Colon <$> replicateM n (randIPv6AddrChunk "____")
+  | n > 0 && n < 9 =
+    intersperse Colon <$> replicateM n (randIPv6AddrChunk "____")
   | otherwise      = return []
 
 -- | Given a MAC address, returns 'Just' the corresponding 'IPv6AddrToken' list, or 'Nothing'.
@@ -58,8 +59,9 @@ macAddrToIPv6AddrTokens t =
 -- > getTokIPv6AddrOf "eth0" == Just [SixteenBit "fe80",DoubleColon,SixteenBit "fa1d",Colon,SixteenBit "58cc",Colon,SixteenBit "9516"]
 --
 getTokIPv6AddrOf :: String -> IO (Maybe [IPv6AddrToken])
-getTokIPv6AddrOf s = maybe Nothing (maybeTokIPv6Addr. T.pack . show) <$>
-                       (lookup s <$> networkInterfacesIPv6AddrList)
+getTokIPv6AddrOf s =
+  maybe Nothing (maybeTokIPv6Addr. T.pack . show) <$>
+    (lookup s <$> networkInterfacesIPv6AddrList)
 
 -- | Given a valid name of a local network interface,
 -- returns 'Just' the corresponding list of 'IPv6AddrToken' of the interface's MAC Address,
@@ -72,6 +74,7 @@ getTokMacAddrOf s =
   maybe Nothing (macAddrToIPv6AddrTokens . T.pack . show) <$>
     (lookup s <$> networkInterfacesMacAddrList)
   where
-    networkInterfacesMacAddrList = getNetworkInterfaces >>= \n -> return $ map networkInterfacesMac n
+    networkInterfacesMacAddrList = getNetworkInterfaces >>=
+      \n -> return $ map networkInterfacesMac n
       where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
 

@@ -10,9 +10,9 @@ module Text.IPv6Addr.Internal
     , isIPv6Addr
     , maybeTokIPv6Addr
     , maybeTokPureIPv6Addr
+    , toDoubleColon
     , fromDoubleColon
     , fromIPv6Addr
-    , toDoubleColon
     , networkInterfacesIPv6AddrList
     ) where
 
@@ -66,7 +66,8 @@ isIPv6Addr tks =
                 AllZeros     -> lenconst
                 _            -> False
          1 -> case lasttk of
-                IPv4Addr _ -> (lentks == 13 && cdctks == 0) || (lentks < 12 && cdctks == 1)
+                IPv4Addr _ ->
+                  (lentks == 13 && cdctks == 0) || (lentks < 12 && cdctks == 1)
                 _          -> False
          _ -> False))
          where
