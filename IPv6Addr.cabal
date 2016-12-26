@@ -1,5 +1,5 @@
 name:                IPv6Addr
-version:             0.6.2.0
+version:             0.6.3
 synopsis:            Library to deal with IPv6 address text representations.
 description:         Library to deal with IPv6 address text representations, canonization and manipulations.
 homepage:            https://github.com/MichelBoucey/IPv6Addr
