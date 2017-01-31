@@ -27,15 +27,17 @@ randIPv6AddrChunk m =
   mapM getHex m >>= \g -> return $ SixteenBit $ T.dropWhile (=='0') $ T.pack g
   where
     getHex c
-        | c == '_'  = intToDigit <$> randomRIO (0,15)
-        | otherwise = return c
+      | c == '_'  = getDigit
+      | otherwise = pure c
 
 -- | Generates a random partial 'IPv6Addr' with n 'SixteenBit'.
 randPartialIPv6Addr :: Int -> IO [IPv6AddrToken]
-randPartialIPv6Addr n
-  | n > 0 && n < 9 =
-    intersperse Colon <$> replicateM n (randIPv6AddrChunk "____")
-  | otherwise      = return []
+randPartialIPv6Addr n =
+  if n > 0 && n < 9 
+    then
+      intersperse Colon <$>
+        replicateM n (SixteenBit <$> T.pack <$> replicateM 4 getDigit)
+    else pure []
 
 -- | Given a MAC address, returns 'Just' the corresponding 'IPv6AddrToken' list, or 'Nothing'.
 --
@@ -75,6 +77,9 @@ getTokMacAddrOf s =
     (lookup s <$> networkInterfacesMacAddrList)
   where
     networkInterfacesMacAddrList = getNetworkInterfaces >>=
-      \n -> return $ map networkInterfacesMac n
+      \n -> return (networkInterfacesMac <$> n)
       where networkInterfacesMac (NetworkInterface n _ _ m) = (n,m)
+
+getDigit :: IO Char
+getDigit = intToDigit <$> randomRIO (0,15)
 
