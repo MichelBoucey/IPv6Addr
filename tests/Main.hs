@@ -25,6 +25,7 @@ tests = TestList
   , (~?=) (maybeIPv6Addr "::1") (Just (IPv6Addr "::1"))
   , (~?=) (maybeIPv6Addr "::1:") Nothing
   , (~?=) (maybeIPv6Addr "0000:0000:0000:0000:0000:0000:0000:0001") (Just (IPv6Addr "::1"))
+  , (~?=) (maybeIPv6Addr "0:0:0:0:0:0:0:1") (Just (IPv6Addr "::1"))
   , (~?=) (maybeIPv6Addr "a") Nothing
   , (~?=) (maybeIPv6Addr "ab") Nothing
   , (~?=) (maybeIPv6Addr "abc") Nothing
