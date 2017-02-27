@@ -7,7 +7,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Michel Boucey
 maintainer:          michel.boucey@cybervisible.fr
-copyright:           (c) 2011-2016 - Michel Boucey
+copyright:           (c) 2011-2017 - Michel Boucey
 category:            Network
 build-type:          Simple
 extra-source-files:  README.md
@@ -18,7 +18,10 @@ Source-Repository head
   Location: https://github.com/MichelBoucey/IPv6Addr.git
 
 library
-  exposed-modules:  Text.IPv6Addr, Text.IPv6Addr.Types, Text.IPv6Addr.Manip, Text.IPv6Addr.Internal
+  exposed-modules:  Text.IPv6Addr
+                  , Text.IPv6Addr.Manip
+                  , Text.IPv6Addr.Types
+  other-modules:    Text.IPv6Addr.Internal
   other-extensions: OverloadedStrings
   build-depends:    base >=4.8 && <5
                   , text >=1.1 && <1.3
