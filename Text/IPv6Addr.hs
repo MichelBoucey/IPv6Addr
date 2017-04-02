@@ -23,6 +23,7 @@ module Text.IPv6Addr
 
     ) where
 
+import           Data.Aeson
 import           Data.IP                (IPv6)
 import           Data.Maybe             (fromJust, isNothing)
 import           Data.Monoid            ((<>))
@@ -38,6 +39,16 @@ import           Text.IPv6Addr.Types
 instance Eq IPv6Addr where
   (==) (IPv6Addr a) (IPv6Addr b) =
     show (maybePureIPv6Addr a) == show (maybePureIPv6Addr b)
+
+instance ToJSON IPv6Addr where
+  toJSON (IPv6Addr a) = String a
+
+instance FromJSON IPv6Addr where
+  parseJSON (String s) =
+    case maybeIPv6Addr s of
+      Just a  -> pure a
+      Nothing -> fail "Not An IPv6 Address"
+  parseJSON _          = fail "JSON String Expected"
 
 -- | Returns 'Just' the text representation of a canonized
 -- 'IPv6Addr' in conformation with RFC 5952, or 'Nothing'.
