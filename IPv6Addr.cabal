@@ -19,9 +19,6 @@ Source-Repository head
 
 library
   exposed-modules:  Text.IPv6Addr
-                  , Text.IPv6Addr.Manip
-                  , Text.IPv6Addr.Types
-  other-modules:    Text.IPv6Addr.Internal
   other-extensions: OverloadedStrings
   build-depends:    base >=4.8 && < 5
                   , text >=1.1 && < 1.3
