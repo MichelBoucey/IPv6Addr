@@ -20,6 +20,7 @@ module Text.IPv6Addr
     , randIPv6AddrWithPrefix
 
     -- * Manipulations
+    , IPv6AddrToken (..)
     , randIPv6AddrChunk
     , randPartialIPv6Addr
     , macAddrToIPv6AddrTokens
@@ -48,14 +49,6 @@ data IPv6Addr = IPv6Addr !T.Text
 instance Show IPv6Addr where
   show (IPv6Addr a) = T.unpack a
 
-data IPv6AddrToken
-  = SixteenBit  !T.Text -- ^ A four hexadecimal digits group representing a 16-Bit chunk
-  | AllZeros            -- ^ An all zeros 16-Bit chunk
-  | Colon               -- ^ A separator between 16-Bit chunks
-  | DoubleColon         -- ^ A double-colon stands for a unique compression of many consecutive 16-Bit chunks
-  | IPv4Addr    !T.Text -- ^ An embedded IPv4 address as representation of the last 32-Bit
-  deriving (Eq, Show)
-
 instance Eq IPv6Addr where
   (==) (IPv6Addr a) (IPv6Addr b) =
     show (maybePureIPv6Addr a) == show (maybePureIPv6Addr b)
@@ -69,6 +62,14 @@ instance FromJSON IPv6Addr where
       Just a  -> pure a
       Nothing -> fail "Not An IPv6 Address"
   parseJSON _          = fail "JSON String Expected"
+
+data IPv6AddrToken
+  = SixteenBit  !T.Text -- ^ A four hexadecimal digits group representing a 16-Bit chunk
+  | AllZeros            -- ^ An all zeros 16-Bit chunk
+  | Colon               -- ^ A separator between 16-Bit chunks
+  | DoubleColon         -- ^ A double-colon stands for a unique compression of many consecutive 16-Bit chunks
+  | IPv4Addr    !T.Text -- ^ An embedded IPv4 address as representation of the last 32-Bit
+  deriving (Eq, Show)
 
 -- | Returns 'Just' the text representation of a canonized
 -- 'IPv6Addr' in conformation with RFC 5952, or 'Nothing'.
@@ -174,14 +175,14 @@ randIPv6AddrWithPrefix p =
                          , pure [DoubleColon]
                          , randPartialIPv6Addr r'
                          ]
-      return $ ipv6TokensToIPv6Addr tks
+      return (ipv6TokensToIPv6Addr tks)
     else
       case maybeIPv6AddrTokens (fromJust p) of
         Just tks -> do
           ntks <- do let ctks = countChunks tks
                      case (snd ctks :: Int) of
-                        0 -> return $ 8 - fst ctks
-                        1 -> return $ 6 - fst ctks
+                        0 -> return (8 - fst ctks)
+                        1 -> return (6 - fst ctks)
                         _ -> return 0
           guard (ntks > 0)
           rtks <- randPartialIPv6Addr ntks
@@ -240,10 +241,7 @@ randPartialIPv6Addr n =
 macAddrToIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 macAddrToIPv6AddrTokens t =
   case parse macAddr t of
-    Done a b ->
-      if a == T.empty
-        then intersperse Colon <$> b
-        else Nothing
+    Done a b -> guard (a == T.empty) >> intersperse Colon <$> b
     _        -> Nothing
 
 --
@@ -362,7 +360,7 @@ maybeTokIPv6Addr t =
   case maybeIPv6AddrTokens t of
     Just ltks -> do
       guard (isIPv6Addr ltks)
-      Just $ (ipv4AddrReplacement . toDoubleColon . fromDoubleColon) ltks
+      return (ipv4AddrReplacement . toDoubleColon . fromDoubleColon $ ltks)
     Nothing   -> Nothing
   where
     ipv4AddrReplacement ltks =
@@ -376,7 +374,7 @@ maybeTokPureIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokPureIPv6Addr t = do
   ltks <- maybeIPv6AddrTokens t
   guard (isIPv6Addr ltks)
-  return $ (toDoubleColon . ipv4AddrReplacement . fromDoubleColon) ltks
+  return (toDoubleColon . ipv4AddrReplacement . fromDoubleColon $ ltks)
   where
     ipv4AddrReplacement ltks' =
       init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks')
@@ -385,7 +383,7 @@ maybeTokPureIPv6Addr t = do
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 maybeIPv6AddrTokens s =
   case readText s of
-    Done r l  -> if r==T.empty then Just l else Nothing
+    Done r l  -> guard (r == T.empty) >> Just l
     Fail {}   -> Nothing
     Partial _ -> Nothing
   where
@@ -447,7 +445,7 @@ expandTokens :: [IPv6AddrToken] -> [IPv6AddrToken]
 expandTokens =
   map expandToken
   where
-    expandToken (SixteenBit s) = SixteenBit $ T.justifyRight 4 '0' s
+    expandToken (SixteenBit s) = SixteenBit (T.justifyRight 4 '0' s)
     expandToken AllZeros       = SixteenBit "0000"
     expandToken t              = t
 
@@ -499,7 +497,7 @@ toDoubleColon tks =
         groupZerosRuns = group . filter (/= Colon)
 
 ipv6TokensToIPv6Addr :: [IPv6AddrToken] -> Maybe IPv6Addr
-ipv6TokensToIPv6Addr l = Just $ IPv6Addr $ ipv6TokensToText l
+ipv6TokensToIPv6Addr l = Just (IPv6Addr $ ipv6TokensToText l)
 
 networkInterfacesIPv6AddrList :: IO [(String,Network.Info.IPv6)]
 networkInterfacesIPv6AddrList =
@@ -538,12 +536,12 @@ ipv4Addr = do
   guard (n3 /= T.empty)
   n4 <- manyDigits
   guard (n4 /= T.empty)
-  return $ IPv4Addr $ T.intercalate "." [n1,n2,n3,n4]
+  return (IPv4Addr $ T.intercalate "." [n1,n2,n3,n4])
   where
     manyDigits = do
       ds <- takeWhile1 isDigit
       case R.decimal ds :: Either String (Integer, T.Text) of
-        Right (n,_) -> return $ if n < 256 then T.pack $ show n else T.empty
+        Right (n,_) -> return (if n < 256 then T.pack $ show n else T.empty)
         Left  _     -> return T.empty
 
 doubleColon :: Parser IPv6AddrToken
