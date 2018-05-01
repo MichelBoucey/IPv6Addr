@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Text.IPv6Addr
@@ -39,7 +40,13 @@ import           Data.Maybe           (fromJust, isNothing)
 import           Data.Monoid          ((<>))
 import qualified Data.Text            as T
 import qualified Data.Text.Read       as R (decimal)
+
+#if MIN_VERSION_network (2,7,0)
+import           Network.Socket       (HostName)
+#else
 import           Network              (HostName)
+#endif
+
 import           Network.Info
 import           Numeric              (showHex)
 import           System.Random        (randomRIO)
