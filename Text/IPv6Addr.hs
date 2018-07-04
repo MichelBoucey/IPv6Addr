@@ -331,6 +331,10 @@ isIPv6Addr tks =
            diffNext (t:ts) = do
              let h = head ts
              case t of
+               DoubleColon ->
+                 case h of
+                   Colon        -> False
+                   _            -> True 
                SixteenBit _ ->
                  case h of
                    SixteenBit _ -> False
