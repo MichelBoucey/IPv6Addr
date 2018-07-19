@@ -36,7 +36,7 @@ import           Data.Char            (intToDigit, isDigit)
 import           Data.IP              (IPv6)
 import           Data.List            (elemIndex, elemIndices, group,
                                        intersperse, isSuffixOf)
-import           Data.Maybe           (fromJust, isNothing)
+import           Data.Maybe           (fromJust, isJust, isNothing)
 import           Data.Monoid          ((<>))
 import qualified Data.Text            as T
 import qualified Data.Text.Read       as R (decimal)
@@ -140,7 +140,7 @@ toHostName = show
 
 -- | Given an 'IPv6addr', returns the corresponding 'IPv6' address.
 toIPv6 :: IPv6Addr -> Data.IP.IPv6
-toIPv6 a = read $ show a
+toIPv6 a = read (show a)
 
 -- | Returns 'Just' the canonized 'IPv6Addr' of the given local network interface,
 -- or 'Nothing'.
@@ -183,21 +183,22 @@ randIPv6AddrWithPrefix p =
                          , randPartialIPv6Addr r'
                          ]
       return (ipv6TokensToIPv6Addr tks)
-    else
-      case maybeIPv6AddrTokens (fromJust p) of
-        Just tks -> do
-          ntks <- do let ctks = countChunks tks
-                     case (snd ctks :: Int) of
-                        0 -> return (8 - fst ctks)
-                        1 -> return (6 - fst ctks)
-                        _ -> return 0
-          guard (ntks > 0)
-          rtks <- randPartialIPv6Addr ntks
-          let tks' = addColon tks ++ rtks
-          guard (isIPv6Addr tks')
-          return $ ipv6TokensToIPv6Addr $
-            (toDoubleColon . fromDoubleColon) tks'
-        Nothing  -> return Nothing
+    else do
+      let mtks = maybeIPv6AddrTokens (fromJust p)
+      guard (isJust mtks)
+      let tks = fromJust mtks
+      ntks <- do
+        let ctks = countChunks tks
+        case (snd ctks :: Int) of
+          0 -> return (8 - fst ctks)
+          1 -> return (6 - fst ctks)
+          _ -> return 0
+      guard (ntks > 0)
+      rtks <- randPartialIPv6Addr ntks
+      let tks' = addColon tks ++ rtks
+      guard (isIPv6Addr tks')
+      return $ ipv6TokensToIPv6Addr $
+        (toDoubleColon . fromDoubleColon) tks'
   where
   countChunks =
     foldr go (0,0)
@@ -226,7 +227,7 @@ randIPv6AddrWithPrefix p =
 --
 randIPv6AddrChunk :: String -> IO IPv6AddrToken
 randIPv6AddrChunk m =
-  mapM getHex m >>= \g -> return $ SixteenBit $ T.dropWhile (=='0') $ T.pack g
+  mapM getHex m >>= \g -> return (SixteenBit $ T.dropWhile (=='0') $ T.pack g)
   where
     getHex c
       | c == '_'  = getDigit
@@ -248,8 +249,8 @@ randPartialIPv6Addr n =
 macAddrToIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 macAddrToIPv6AddrTokens t =
   case parse macAddr t of
-    Done a b -> guard (a == T.empty) >> intersperse Colon <$> b
-    _        -> Nothing
+    Done "" b -> intersperse Colon <$> b
+    _         -> Nothing
 
 --
 -- Functions based upon Network.Info to get local MAC and IPv6 addresses.
@@ -292,7 +293,7 @@ fromIPv6Addr (IPv6Addr t) = t
 
 -- | Given an arbitrary list of 'IPv6AddrToken', returns the corresponding 'T.Text'.
 ipv6TokensToText :: [IPv6AddrToken] -> T.Text
-ipv6TokensToText l = T.concat $ map ipv6TokenToText l
+ipv6TokensToText l = T.concat (ipv6TokenToText <$> l)
 
 -- | Returns the corresponding 'T.Text' of an IPv6 address token.
 ipv6TokenToText :: IPv6AddrToken -> T.Text
@@ -352,7 +353,7 @@ isIPv6Addr tks =
                DoubleColon  -> True
                AllZeros     -> True
                _            -> False
-           countDoubleColon l = length $ elemIndices DoubleColon l
+           countDoubleColon l = length (elemIndices DoubleColon l)
 
 countIPv4Addr :: [IPv6AddrToken] -> Int
 countIPv4Addr =
@@ -394,9 +395,8 @@ maybeTokPureIPv6Addr t = do
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 maybeIPv6AddrTokens s =
   case readText s of
-    Done r l  -> guard (r == T.empty) >> Just l
-    Fail {}   -> Nothing
-    Partial _ -> Nothing
+    Done "" l  -> Just l
+    _          -> Nothing
   where
     readText _s =
       feed
@@ -502,7 +502,7 @@ toDoubleColon tks =
                 (True,i) -> i
                 _        -> 0
     zerosRunsList x =
-      map helper $ groupZerosRuns x
+      helper <$> groupZerosRuns x
       where
         helper h = (head h == AllZeros, lh) where lh = length h
         groupZerosRuns = group . filter (/= Colon)
@@ -530,12 +530,12 @@ sixteenBit :: Parser IPv6AddrToken
 sixteenBit = do
   r <- ipv6AddrFullChunk <|> count 3 hexaChar <|> count 2 hexaChar <|> count 1 hexaChar
   -- "Leading zeros MUST be suppressed" (RFC 5952, 4.1)
-  let r' = T.dropWhile (=='0') $ T.pack r
+  let r' = T.dropWhile (=='0') (T.pack r)
   return $
     if T.null r'
       then AllZeros
       -- Hexadecimal digits MUST be in lowercase (RFC 5952 4.3)
-      else SixteenBit $ T.toLower r'
+      else SixteenBit (T.toLower r')
 
 ipv4Addr :: Parser IPv6AddrToken
 ipv4Addr = do
