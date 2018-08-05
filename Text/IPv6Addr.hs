@@ -31,7 +31,7 @@ module Text.IPv6Addr
 import           Control.Applicative  ((<|>))
 import           Control.Monad        (replicateM, guard)
 import           Data.Aeson
-import           Data.Attoparsec.Text as A
+import           Data.Attoparsec.Text
 import           Data.Char            (intToDigit, isDigit)
 import           Data.IP              (IPv6)
 import           Data.List            (elemIndex, elemIndices, group,
@@ -189,10 +189,11 @@ randIPv6AddrWithPrefix p =
       let tks = fromJust mtks
       ntks <- do
         let ctks = countChunks tks
-        case (snd ctks :: Int) of
-          0 -> return (8 - fst ctks)
-          1 -> return (6 - fst ctks)
-          _ -> return 0
+        return $
+          case (snd ctks :: Int) of
+            0 -> 8 - fst ctks
+            1 -> 6 - fst ctks
+            _ -> 0
       guard (ntks > 0)
       rtks <- randPartialIPv6Addr ntks
       let tks' = addColon tks ++ rtks
@@ -200,20 +201,20 @@ randIPv6AddrWithPrefix p =
       return $ ipv6TokensToIPv6Addr $
         (toDoubleColon . fromDoubleColon) tks'
   where
-  countChunks =
-    foldr go (0,0)
-    where
-      go c (a,b) =
-        case c of
-          SixteenBit _ -> (a+1,b)
-          AllZeros     -> (a+1,b)
-          DoubleColon  -> (a,b+1)
-          _            -> (a,b)
-  addColon ts =
-    case last ts of
-      SixteenBit _ -> ts ++ [Colon]
-      AllZeros     -> ts ++ [Colon]
-      _            -> ts
+    countChunks =
+      foldr go (0,0)
+      where
+        go c (a,b) =
+          case c of
+            SixteenBit _ -> (a+1,b)
+            AllZeros     -> (a+1,b)
+            DoubleColon  -> (a,b+1)
+            _            -> (a,b)
+    addColon ts =
+      case last ts of
+        SixteenBit _ -> ts ++ [Colon]
+        AllZeros     -> ts ++ [Colon]
+        _            -> ts
 
 
 -- ------------------------------------------------------------------------ --
@@ -283,9 +284,9 @@ getTokMacAddrOf s =
 getDigit :: IO Char
 getDigit = intToDigit <$> randomRIO (0,15)
 
--- ----------------------------------------------------------------------------
--- Internals
--- ----------------------------------------------------------------------------
+-- ------------------------------------------------------------------------- --
+-- Internals                                                                 --
+-- ------------------------------------------------------------------------- --
 
 -- | Returns the 'T.Text' of an IPv6 address.
 fromIPv6Addr :: IPv6Addr -> T.Text
@@ -368,12 +369,10 @@ countIPv4Addr =
 -- address text representation validated against RFC 4291 and canonized
 -- in conformation with RFC 5952, or 'Nothing'.
 maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
-maybeTokIPv6Addr t =
-  case maybeIPv6AddrTokens t of
-    Just ltks -> do
-      guard (isIPv6Addr ltks)
-      return (ipv4AddrReplacement . toDoubleColon . fromDoubleColon $ ltks)
-    Nothing   -> Nothing
+maybeTokIPv6Addr t = do
+  ltks <- maybeIPv6AddrTokens t
+  guard (isIPv6Addr ltks)
+  return (ipv4AddrReplacement . toDoubleColon . fromDoubleColon $ ltks)
   where
     ipv4AddrReplacement ltks =
       if ipv4AddrRewrite ltks
@@ -449,7 +448,7 @@ ipv4AddrToIPv6AddrTokens t =
        , SixteenBit ((!!) m 2 <> addZero ((!!) m 3)) ]
     _          -> [t]
     where
-      toHex a = map (\x -> T.pack $ showHex (read (T.unpack x)::Int) "") $ T.split (=='.') a
+      toHex a = (\x -> T.pack $ showHex (read (T.unpack x)::Int) "") <$> (T.split (=='.') a)
       addZero d = if T.length d == 1 then "0" <> d else d
 
 expandTokens :: [IPv6AddrToken] -> [IPv6AddrToken]
@@ -495,7 +494,7 @@ toDoubleColon tks =
       where
         firstLongestZerosRunIndex x y = sum . snd . unzip $ Prelude.takeWhile (/=(True,y)) x
         longestLengthZerosRun x =
-          maximum $ map longest x
+          maximum (longest <$> x)
           where
             longest _t =
               case _t of
@@ -549,11 +548,14 @@ ipv4Addr = do
   guard (n4 /= T.empty)
   return (IPv4Addr $ T.intercalate "." [n1,n2,n3,n4])
   where
-    manyDigits = do
-      ds <- takeWhile1 isDigit
-      case R.decimal ds :: Either String (Integer, T.Text) of
-        Right (n,_) -> return (if n < 256 then T.pack $ show n else T.empty)
-        Left  _     -> return T.empty
+    manyDigits = takeWhile1 isDigit >>= \ds ->
+      return $
+        case R.decimal ds :: Either String (Integer, T.Text) of
+          Right (n,_) ->
+            if n < 256
+              then T.pack (show n)
+              else T.empty
+          Left  _     -> T.empty
 
 doubleColon :: Parser IPv6AddrToken
 doubleColon = do
