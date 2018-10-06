@@ -129,7 +129,7 @@ toIP6ARPA a =
 --
 toUNC :: IPv6Addr -> T.Text
 toUNC a =
-  (T.concatMap trans $ fromIPv6Addr $ fromJust $ maybePureIPv6Addr $ fromIPv6Addr a) <> ".ipv6-literal.net"
+  T.concatMap trans (fromIPv6Addr $ fromJust $ maybePureIPv6Addr $ fromIPv6Addr a) <> ".ipv6-literal.net"
   where
     trans ':' = "-"
     trans c   = T.pack [c]
@@ -138,7 +138,7 @@ toUNC a =
 toHostName :: IPv6Addr -> HostName
 toHostName = show
 
--- | Given an 'IPv6addr', returns the corresponding 'IPv6' address.
+-- | Given an 'IPv6Addr', returns the corresponding 'Data.IP.IPv6' address.
 toIPv6 :: IPv6Addr -> Data.IP.IPv6
 toIPv6 a = read (show a)
 
@@ -448,7 +448,7 @@ ipv4AddrToIPv6AddrTokens t =
        , SixteenBit ((!!) m 2 <> addZero ((!!) m 3)) ]
     _          -> [t]
     where
-      toHex a = (\x -> T.pack $ showHex (read (T.unpack x)::Int) "") <$> (T.split (=='.') a)
+      toHex a = (\x -> T.pack $ showHex (read (T.unpack x)::Int) "") <$> T.split (=='.') a
       addZero d = if T.length d == 1 then "0" <> d else d
 
 expandTokens :: [IPv6AddrToken] -> [IPv6AddrToken]
