@@ -51,7 +51,7 @@ import           Network.Info
 import           Numeric              (showHex)
 import           System.Random        (randomRIO)
 
-data IPv6Addr = IPv6Addr !T.Text
+newtype IPv6Addr = IPv6Addr T.Text
 
 instance Show IPv6Addr where
   show (IPv6Addr a) = T.unpack a
@@ -492,7 +492,7 @@ toDoubleColon tks =
       let l = longestLengthZerosRun t
       in (firstLongestZerosRunIndex t l,l)
       where
-        firstLongestZerosRunIndex x y = sum . snd . unzip $ Prelude.takeWhile (/=(True,y)) x
+        firstLongestZerosRunIndex x y = sum . map snd $ Prelude.takeWhile (/=(True,y)) x
         longestLengthZerosRun x =
           maximum (longest <$> x)
           where
