@@ -36,7 +36,7 @@ import           Data.Char            (intToDigit, isDigit)
 import           Data.IP              (IPv6)
 import           Data.List            (elemIndex, elemIndices, group,
                                        intersperse, isSuffixOf)
-import           Data.Maybe           (fromJust, isJust, isNothing)
+import           Data.Maybe           (fromJust, isJust)
 import           Data.Monoid          ((<>))
 import qualified Data.Text            as T
 import qualified Data.Text.Read       as R (decimal)
@@ -161,45 +161,43 @@ randIPv6Addr = fromJust <$> randIPv6AddrWithPrefix Nothing
 -- > randIPv6AddrWithPrefix (Just "4321:0:1:2:3:4")
 --
 randIPv6AddrWithPrefix :: Maybe T.Text -> IO (Maybe IPv6Addr)
-randIPv6AddrWithPrefix p =
-  if isNothing p
-    then do
-      r   <- randomRIO (1,8)
-      tks <-
-        case r of
+randIPv6AddrWithPrefix Nothing = do
+  r   <- randomRIO (1,8)
+  tks <-
+    case r of
+      8 -> randPartialIPv6Addr 8
+      _ -> do
+        r' <- randomRIO (1,8-r)
+        case r + r' of
+          7 -> concat <$>
+            sequence [ randPartialIPv6Addr r
+                     , pure [Colon,AllZeros,Colon]
+                     , randPartialIPv6Addr r'
+                     ]
           8 -> randPartialIPv6Addr 8
-          _ -> do
-            r' <- randomRIO (1,8-r)
-            case r + r' of
-              7 -> concat <$>
-                sequence [ randPartialIPv6Addr r
-                         , pure [Colon,AllZeros,Colon]
-                         , randPartialIPv6Addr r'
-                         ]
-              8 -> randPartialIPv6Addr 8
-              _ -> concat <$>
-                sequence [ randPartialIPv6Addr r
-                         , pure [DoubleColon]
-                         , randPartialIPv6Addr r'
-                         ]
-      return (ipv6TokensToIPv6Addr tks)
-    else do
-      let mtks = maybeIPv6AddrTokens (fromJust p)
-      guard (isJust mtks)
-      let tks = fromJust mtks
-      ntks <- do
-        let ctks = countChunks tks
-        return $
-          case (snd ctks :: Int) of
-            0 -> 8 - fst ctks
-            1 -> 6 - fst ctks
-            _ -> 0
-      guard (ntks > 0)
-      rtks <- randPartialIPv6Addr ntks
-      let tks' = addColon tks ++ rtks
-      guard (isIPv6Addr tks')
-      return $ ipv6TokensToIPv6Addr $
-        (toDoubleColon . fromDoubleColon) tks'
+          _ -> concat <$>
+            sequence [ randPartialIPv6Addr r
+                     , pure [DoubleColon]
+                     , randPartialIPv6Addr r'
+                     ]
+  return (ipv6TokensToIPv6Addr tks)
+randIPv6AddrWithPrefix (Just p) = do
+  let mtks = maybeIPv6AddrTokens p
+  guard (isJust mtks)
+  let tks = fromJust mtks
+  ntks <- do
+    let ctks = countChunks tks
+    return $
+      case (snd ctks :: Int) of
+        0 -> 8 - fst ctks
+        1 -> 6 - fst ctks
+        _ -> 0
+  guard (ntks > 0)
+  rtks <- randPartialIPv6Addr ntks
+  let tks' = addColon tks ++ rtks
+  guard (isIPv6Addr tks')
+  return $ ipv6TokensToIPv6Addr $
+    (toDoubleColon . fromDoubleColon) tks'
   where
     countChunks =
       foldr go (0,0)
@@ -218,7 +216,7 @@ randIPv6AddrWithPrefix p =
 
 
 -- ------------------------------------------------------------------------ --
--- Maniplations                                                             --
+-- Manipulations                                                             --
 -- ------------------------------------------------------------------------ --
 
 -- | Returns 'Just' a random 'SixteenBit' token based on a mask \"____\", each
