@@ -118,10 +118,10 @@ sameIPv6Addr a b =
 --
 toIP6ARPA :: IPv6Addr -> T.Text
 toIP6ARPA a =
-  T.reverse (T.concatMap trans $ fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr a) <> "IP6.ARPA."
+  T.reverse (T.concatMap go $ fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr a) <> "IP6.ARPA."
   where
-    trans ':' = T.empty
-    trans c   = "." <> T.pack [c]
+    go ':' = T.empty
+    go c   = "." <> T.pack [c]
 
 -- | Returns the Windows UNC path name of the given IPv6 Address.
 --
@@ -129,10 +129,10 @@ toIP6ARPA a =
 --
 toUNC :: IPv6Addr -> T.Text
 toUNC a =
-  T.concatMap trans (fromIPv6Addr $ fromJust $ maybePureIPv6Addr $ fromIPv6Addr a) <> ".ipv6-literal.net"
+  T.concatMap go (fromIPv6Addr $ fromJust $ maybePureIPv6Addr $ fromIPv6Addr a) <> ".ipv6-literal.net"
   where
-    trans ':' = "-"
-    trans c   = T.pack [c]
+    go ':' = "-"
+    go c   = T.pack [c]
 
 -- | Given an 'IPv6Addr', returns the corresponding 'HostName'.
 toHostName :: IPv6Addr -> HostName
@@ -194,7 +194,7 @@ randIPv6AddrWithPrefix (Just p) = do
         _ -> 0
   guard (ntks > 0)
   rtks <- randPartialIPv6Addr ntks
-  let tks' = addColon tks ++ rtks
+  let tks' = addColon tks <> rtks
   guard (isIPv6Addr tks')
   return $ ipv6TokensToIPv6Addr $
     (toDoubleColon . fromDoubleColon) tks'
@@ -210,8 +210,8 @@ randIPv6AddrWithPrefix (Just p) = do
             _            -> (a,b)
     addColon ts =
       case last ts of
-        SixteenBit _ -> ts ++ [Colon]
-        AllZeros     -> ts ++ [Colon]
+        SixteenBit _ -> ts <> [Colon]
+        AllZeros     -> ts <> [Colon]
         _            -> ts
 
 
@@ -299,7 +299,7 @@ ipv6TokenToText :: IPv6AddrToken -> T.Text
 ipv6TokenToText (SixteenBit s) = s
 ipv6TokenToText Colon          = ":"
 ipv6TokenToText DoubleColon    = "::"
-ipv6TokenToText AllZeros       = "0" -- "A single 16-bit 0000 field MUST be represented as 0" (RFC 5952, 4.1)
+ipv6TokenToText AllZeros       = "0"  -- "A single 16-bit 0000 field MUST be represented as 0" (RFC 5952, 4.1)
 ipv6TokenToText (IPv4Addr a)   = a
 
 -- | Returns 'True' if a list of 'IPv6AddrToken' constitutes a valid IPv6 Address.
@@ -374,7 +374,7 @@ maybeTokIPv6Addr t = do
   where
     ipv4AddrReplacement ltks =
       if ipv4AddrRewrite ltks
-        then init ltks ++ ipv4AddrToIPv6AddrTokens (last ltks)
+        then init ltks <> ipv4AddrToIPv6AddrTokens (last ltks)
         else ltks
 
 -- | Returns 'Just' the list of tokenized pure IPv6 address, always rewriting an
@@ -386,7 +386,7 @@ maybeTokPureIPv6Addr t = do
   return (toDoubleColon . ipv4AddrReplacement . fromDoubleColon $ ltks)
   where
     ipv4AddrReplacement ltks' =
-      init ltks' ++ ipv4AddrToIPv6AddrTokens (last ltks')
+      init ltks' <> ipv4AddrToIPv6AddrTokens (last ltks')
 
 -- | Tokenize a 'T.Text' into 'Just' a list of 'IPv6AddrToken', or 'Nothing'.
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
@@ -465,9 +465,9 @@ fromDoubleColon tks =
       let s = splitAt (fromJust $ elemIndex DoubleColon tks) tks
           fsts = fst s
           snds = if not (null (snd s)) then tail(snd s) else []
-          fste = if null fsts then [] else fsts ++ [Colon]
+          fste = if null fsts then [] else fsts <> [Colon]
           snde = if null snds then [] else Colon : snds
-      fste ++ allZerosTokensReplacement(quantityOfAllZerosTokenToReplace tks) ++ snde
+      fste <> allZerosTokensReplacement(quantityOfAllZerosTokenToReplace tks) <> snde
       where
         allZerosTokensReplacement x = intersperse Colon (replicate x AllZeros)
         quantityOfAllZerosTokenToReplace _x =
@@ -485,7 +485,7 @@ toDoubleColon tks =
     zerosToDoubleColon ls (_,1) = ls
     zerosToDoubleColon ls (i,l) =
       let ls' = filter (/= Colon) ls
-      in intersperse Colon (Prelude.take i ls') ++ [DoubleColon] ++ intersperse Colon (drop (i+l) ls')
+      in intersperse Colon (Prelude.take i ls') <> [DoubleColon] <> intersperse Colon (drop (i+l) ls')
     zerosRunToReplace t =
       let l = longestLengthZerosRun t
       in (firstLongestZerosRunIndex t l,l)
