@@ -9,7 +9,6 @@ module Text.IPv6Addr
     , sameIPv6Addr
 
     -- * Conversions
-    , fromIPv6Addr
     , toIPv6
     , toHostName
     , toIP6ARPA
@@ -51,14 +50,14 @@ import           Network.Info
 import           Numeric              (showHex)
 import           System.Random        (randomRIO)
 
-newtype IPv6Addr = IPv6Addr T.Text
+newtype IPv6Addr = IPv6Addr { unIPv6Addr :: T.Text }
 
 instance Show IPv6Addr where
   show (IPv6Addr a) = T.unpack a
 
 instance Eq IPv6Addr where
   (==) (IPv6Addr a) (IPv6Addr b) =
-    show (maybePureIPv6Addr a) == show (maybePureIPv6Addr b)
+    (unIPv6Addr <$> maybePureIPv6Addr a) == (unIPv6Addr <$> maybePureIPv6Addr b)
 
 instance ToJSON IPv6Addr where
   toJSON (IPv6Addr a) = String a
@@ -118,7 +117,7 @@ sameIPv6Addr a b =
 --
 toIP6ARPA :: IPv6Addr -> T.Text
 toIP6ARPA a =
-  T.reverse (T.concatMap go $ fromIPv6Addr $ fromJust $ maybeFullIPv6Addr $ fromIPv6Addr a) <> "IP6.ARPA."
+  T.reverse (T.concatMap go $ unIPv6Addr $ fromJust $ maybeFullIPv6Addr $ unIPv6Addr a) <> "IP6.ARPA."
   where
     go ':' = T.empty
     go c   = "." <> T.pack [c]
@@ -129,7 +128,7 @@ toIP6ARPA a =
 --
 toUNC :: IPv6Addr -> T.Text
 toUNC a =
-  T.concatMap go (fromIPv6Addr $ fromJust $ maybePureIPv6Addr $ fromIPv6Addr a) <> ".ipv6-literal.net"
+  T.concatMap go (unIPv6Addr $ fromJust $ maybePureIPv6Addr $ unIPv6Addr a) <> ".ipv6-literal.net"
   where
     go ':' = "-"
     go c   = T.pack [c]
@@ -285,10 +284,6 @@ getDigit = intToDigit <$> randomRIO (0,15)
 -- ------------------------------------------------------------------------- --
 -- Internals                                                                 --
 -- ------------------------------------------------------------------------- --
-
--- | Returns the 'T.Text' of an IPv6 address.
-fromIPv6Addr :: IPv6Addr -> T.Text
-fromIPv6Addr (IPv6Addr t) = t
 
 -- | Given an arbitrary list of 'IPv6AddrToken', returns the corresponding 'T.Text'.
 ipv6TokensToText :: [IPv6AddrToken] -> T.Text
