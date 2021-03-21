@@ -36,7 +36,6 @@ import           Data.IP              (IPv6)
 import           Data.List            (elemIndex, elemIndices, group,
                                        intersperse, isSuffixOf)
 import           Data.Maybe           (fromJust, isJust)
-import           Data.Monoid          ((<>))
 import qualified Data.Text            as T
 import qualified Data.Text.Read       as R (decimal)
 
