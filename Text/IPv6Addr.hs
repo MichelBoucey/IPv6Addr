@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Text.IPv6Addr
-    ( IPv6Addr (IPv6Addr)
+    ( IPv6Addr (..)
     , maybeIPv6Addr
     , maybePureIPv6Addr
     , maybeFullIPv6Addr
