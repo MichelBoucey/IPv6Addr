@@ -34,14 +34,14 @@ import           Data.Attoparsec.Text
 import           Data.Char            (intToDigit, isDigit)
 import           Data.IP              (IPv6)
 import           Data.List            (elemIndex, elemIndices, group,
-                                       intersperse, isSuffixOf)
+                                       intersperse, isSuffixOf, foldl')
 import           Data.Maybe           (fromJust, isJust)
 
 #if !MIN_VERSION_base(4,11,0)
-import Data.Monoid ((<>))
+import           Data.Monoid          ((<>))
 #endif
 
-import qualified Data.Text            as T
+import qualified Data.Text            as T hiding (foldl')
 import qualified Data.Text.Read       as R (decimal)
 
 #if MIN_VERSION_network (2,7,0)
@@ -470,7 +470,7 @@ fromDoubleColon tks =
       where
         allZerosTokensReplacement x = intersperse Colon (replicate x AllZeros)
         quantityOfAllZerosTokenToReplace _x =
-          ntks tks - foldl (\c _x -> if (_x /= DoubleColon) && (_x /= Colon) then c+1 else c) 0 _x
+          ntks tks - foldl' (\c _x -> if (_x /= DoubleColon) && (_x /= Colon) then c+1 else c) 0 _x
           where
             ntks _tks = if countIPv4Addr _tks == 1 then 7 else 8
 
