@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Text.IPv6Addr
@@ -28,13 +28,13 @@ module Text.IPv6Addr
     , getTokMacAddrOf ) where
 
 import           Control.Applicative  ((<|>))
-import           Control.Monad        (replicateM, guard)
+import           Control.Monad        (guard, replicateM)
 import           Data.Aeson
 import           Data.Attoparsec.Text
 import           Data.Char            (intToDigit, isDigit)
 import           Data.IP              (IPv6)
-import           Data.List            (elemIndex, elemIndices, group,
-                                       intersperse, isSuffixOf, foldl')
+import           Data.List            (elemIndex, elemIndices, foldl', group,
+                                       intersperse, isSuffixOf)
 import           Data.Maybe           (fromJust, isJust)
 
 #if !MIN_VERSION_base(4,11,0)
@@ -219,7 +219,7 @@ randIPv6AddrWithPrefix (Just p) = do
 
 
 -- ------------------------------------------------------------------------ --
--- Manipulations                                                             --
+-- Manipulations of IPv6 address chunks                                     --
 -- ------------------------------------------------------------------------ --
 
 -- | Returns 'Just' a random 'SixteenBit' token based on a mask \"____\", each
@@ -332,8 +332,8 @@ isIPv6Addr tks =
              case t of
                DoubleColon ->
                  case h of
-                   Colon        -> False
-                   _            -> True 
+                   Colon -> False
+                   _     -> True
                SixteenBit _ ->
                  case h of
                    SixteenBit _ -> False
@@ -391,8 +391,8 @@ maybeTokPureIPv6Addr t = do
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
 maybeIPv6AddrTokens s =
   case readText s of
-    Done "" l  -> Just l
-    _          -> Nothing
+    Done "" l -> Just l
+    _         -> Nothing
   where
     readText _s =
       feed
