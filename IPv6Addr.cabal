@@ -13,17 +13,7 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
-Tested-With:
-  GHC == 8.0.2
-   || == 8.2.2
-   || == 8.4.4
-   || == 8.6.5
-   || == 8.8.4
-   || == 8.10.7
-   || == 9.0.2
-   || == 9.2.6
-   || == 9.4.5
-   || == 9.6.1
+Tested-With: GHC ==8.8.4 || ==8.10.7 || ==9.0.2 || ==9.2.8 || ==9.4.5 || ==9.6.2
 
 Source-Repository head
   Type: git
