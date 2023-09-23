@@ -143,7 +143,7 @@ toHostName = show
 
 -- | Given an 'IPv6Addr', returns the corresponding 'Data.IP.IPv6' address.
 toIPv6 :: IPv6Addr -> Data.IP.IPv6
-toIPv6 a = read (show a)
+toIPv6 = read . show
 
 -- | Returns 'Just' the canonized 'IPv6Addr' of the given local network interface,
 -- or 'Nothing'.
@@ -213,8 +213,8 @@ randIPv6AddrWithPrefix (Just p) = do
             _            -> (a,b)
     addColon ts =
       case last ts of
-        SixteenBit _ -> ts <> [Colon]
-        AllZeros     -> ts <> [Colon]
+        SixteenBit _ -> ts <> pure Colon
+        AllZeros     -> ts <> pure Colon
         _            -> ts
 
 
@@ -229,7 +229,7 @@ randIPv6AddrWithPrefix (Just p) = do
 --
 randIPv6AddrChunk :: String -> IO IPv6AddrToken
 randIPv6AddrChunk m =
-  mapM getHex m >>= \g -> return (SixteenBit $ T.dropWhile (=='0') $ T.pack g)
+  mapM getHex m >>= \h -> pure (SixteenBit $ T.dropWhile (=='0') $ T.pack h)
   where
     getHex c
       | c == '_'  = getDigit
@@ -291,7 +291,7 @@ getDigit = intToDigit <$> randomRIO (0,15)
 
 -- | Given an arbitrary list of 'IPv6AddrToken', returns the corresponding 'T.Text'.
 ipv6TokensToText :: [IPv6AddrToken] -> T.Text
-ipv6TokensToText l = T.concat (ipv6TokenToText <$> l)
+ipv6TokensToText = T.concat . fmap ipv6TokenToText
 
 -- | Returns the corresponding 'T.Text' of an IPv6 address token.
 ipv6TokenToText :: IPv6AddrToken -> T.Text
@@ -351,7 +351,7 @@ isIPv6Addr tks =
                DoubleColon  -> True
                AllZeros     -> True
                _            -> False
-           countDoubleColon l = length (elemIndices DoubleColon l)
+           countDoubleColon = length . elemIndices DoubleColon
 
 countIPv4Addr :: [IPv6AddrToken] -> Int
 countIPv4Addr =
@@ -367,36 +367,36 @@ countIPv4Addr =
 -- in conformation with RFC 5952, or 'Nothing'.
 maybeTokIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokIPv6Addr t = do
-  ltks <- maybeIPv6AddrTokens t
-  guard (isIPv6Addr ltks)
-  return (ipv4AddrReplacement . toDoubleColon . fromDoubleColon $ ltks)
+  tks <- maybeIPv6AddrTokens t
+  guard (isIPv6Addr tks)
+  return (ipv4AddrReplacement . toDoubleColon . fromDoubleColon $ tks)
   where
-    ipv4AddrReplacement ltks =
-      if ipv4AddrRewrite ltks
-        then init ltks <> ipv4AddrToIPv6AddrTokens (last ltks)
-        else ltks
+    ipv4AddrReplacement tks =
+      if ipv4AddrRewrite tks
+        then init tks <> ipv4AddrToIPv6AddrTokens (last tks)
+        else tks
 
 -- | Returns 'Just' the list of tokenized pure IPv6 address, always rewriting an
 -- embedded IPv4 address if present.
 maybeTokPureIPv6Addr :: T.Text -> Maybe [IPv6AddrToken]
 maybeTokPureIPv6Addr t = do
-  ltks <- maybeIPv6AddrTokens t
-  guard (isIPv6Addr ltks)
-  return (toDoubleColon . ipv4AddrReplacement . fromDoubleColon $ ltks)
+  tks <- maybeIPv6AddrTokens t
+  guard (isIPv6Addr tks)
+  return (toDoubleColon . ipv4AddrReplacement . fromDoubleColon $ tks)
   where
-    ipv4AddrReplacement ltks' =
-      init ltks' <> ipv4AddrToIPv6AddrTokens (last ltks')
+    ipv4AddrReplacement tks' =
+      init tks' <> ipv4AddrToIPv6AddrTokens (last tks')
 
 -- | Tokenize a 'T.Text' into 'Just' a list of 'IPv6AddrToken', or 'Nothing'.
 maybeIPv6AddrTokens :: T.Text -> Maybe [IPv6AddrToken]
-maybeIPv6AddrTokens s =
-  case readText s of
+maybeIPv6AddrTokens t =
+  case readText t of
     Done "" l -> Just l
     _         -> Nothing
   where
-    readText _s =
+    readText t' =
       feed
-        (parse (many1 $ ipv4Addr <|> sixteenBit <|> doubleColon <|> colon) _s)
+        (parse (many1 $ ipv4Addr <|> sixteenBit <|> doubleColon <|> colon) t')
         T.empty
 
 -- | An embedded IPv4 address have to be rewritten to output a pure IPv6 Address
@@ -469,10 +469,10 @@ fromDoubleColon tks =
       fste <> allZerosTokensReplacement(quantityOfAllZerosTokenToReplace tks) <> snde
       where
         allZerosTokensReplacement x = intersperse Colon (replicate x AllZeros)
-        quantityOfAllZerosTokenToReplace _x =
-          ntks tks - foldl' (\c _x -> if (_x /= DoubleColon) && (_x /= Colon) then c+1 else c) 0 _x
+        quantityOfAllZerosTokenToReplace y =
+          ntks tks - foldl' (\c d -> if (d /= DoubleColon) && (d /= Colon) then c+1 else c) 0 y
           where
-            ntks _tks = if countIPv4Addr _tks == 1 then 7 else 8
+            ntks tks' = if countIPv4Addr tks' == 1 then 7 else 8
 
 toDoubleColon :: [IPv6AddrToken] -> [IPv6AddrToken]
 toDoubleColon tks =
@@ -493,8 +493,8 @@ toDoubleColon tks =
         longestLengthZerosRun x =
           maximum (longest <$> x)
           where
-            longest _t =
-              case _t of
+            longest l' =
+              case l' of
                 (True,i) -> i
                 _        -> 0
     zerosRunsList x =
@@ -504,7 +504,7 @@ toDoubleColon tks =
         groupZerosRuns = group . filter (/= Colon)
 
 ipv6TokensToIPv6Addr :: [IPv6AddrToken] -> Maybe IPv6Addr
-ipv6TokensToIPv6Addr l = Just (IPv6Addr $ ipv6TokensToText l)
+ipv6TokensToIPv6Addr = Just . IPv6Addr . ipv6TokensToText
 
 networkInterfacesIPv6AddrList :: IO [(String,Network.Info.IPv6)]
 networkInterfacesIPv6AddrList =
