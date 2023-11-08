@@ -34,7 +34,7 @@ import           Data.Attoparsec.Text
 import           Data.Char            (intToDigit, isDigit)
 import           Data.IP              (IPv6)
 import           Data.List            (elemIndex, elemIndices, foldl', group,
-                                       intersperse, isSuffixOf)
+                                       intersperse, isSuffixOf, uncons)
 import           Data.Maybe           (fromJust, isJust)
 
 #if !MIN_VERSION_base(4,11,0)
@@ -328,7 +328,7 @@ isIPv6Addr tks =
            diffNext [] = False
            diffNext [_] = True
            diffNext (t:ts) = do
-             let h = head ts
+             let h = justHead ts
              case t of
                DoubleColon ->
                  case h of
@@ -346,7 +346,7 @@ isIPv6Addr tks =
                    _            -> diffNext ts
                _            -> diffNext ts
            firstValidToken l =
-             case head l of
+             case justHead l of
                SixteenBit _ -> True
                DoubleColon  -> True
                AllZeros     -> True
@@ -463,7 +463,7 @@ fromDoubleColon tks =
     else do
       let s = splitAt (fromJust $ elemIndex DoubleColon tks) tks
           fsts = fst s
-          snds = if not (null (snd s)) then tail(snd s) else []
+          snds = if not (null (snd s)) then justTail(snd s) else []
           fste = if null fsts then [] else fsts <> [Colon]
           snde = if null snds then [] else Colon : snds
       fste <> allZerosTokensReplacement(quantityOfAllZerosTokenToReplace tks) <> snde
@@ -500,7 +500,7 @@ toDoubleColon tks =
     zerosRunsList x =
       helper <$> groupZerosRuns x
       where
-        helper h = (head h == AllZeros, lh) where lh = length h
+        helper h = (justHead h == AllZeros, lh) where lh = length h
         groupZerosRuns = group . filter (/= Colon)
 
 ipv6TokensToIPv6Addr :: [IPv6AddrToken] -> Maybe IPv6Addr
@@ -569,4 +569,11 @@ ipv6AddrFullChunk = count 4 hexaChar
 
 hexaChar :: Parser Char
 hexaChar = satisfy (inClass "0-9a-fA-F")
+
+-- Helper functions
+justHead :: [a] -> a
+justHead l = fst (fromJust $ uncons l)
+
+justTail :: [a] -> [a]
+justTail l = snd (fromJust $ uncons l)
 
