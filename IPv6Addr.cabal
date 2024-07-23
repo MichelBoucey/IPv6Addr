@@ -20,6 +20,7 @@ Source-Repository head
   Location: https://github.com/MichelBoucey/IPv6Addr.git
 
 library
+  hs-source-dirs:   src/
   exposed-modules:  Text.IPv6Addr
   other-extensions: OverloadedStrings
   build-depends:    base         >=4.8 && < 5
