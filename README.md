@@ -1,4 +1,4 @@
-# IPv6Addr ![CI](https://github.com/MichelBoucey/IPv6Addr/actions/workflows/haskell-ci.yml/badge.svg)
+# IPv6Addr ![CI](https://github.com/MichelBoucey/IPv6Addr/actions/workflows/haskell-ci.yml/badge.svg) [![Hackage](https://img.shields.io/hackage/v/IPv6Addr.svg)](https://hackage.haskell.org/package/IPv6Addr)
 
 A library to deal with IPv6 address text representations, canonization and manipulations.
 
