@@ -33,7 +33,7 @@ import           Data.Aeson
 import           Data.Attoparsec.Text
 import           Data.Char            (intToDigit, isDigit)
 import           Data.IP              (IPv6)
-import           Data.List            (elemIndex, elemIndices, group,
+import           Data.List            (elemIndex, elemIndices, foldl', group,
                                        intersperse, isSuffixOf, uncons)
 import           Data.Maybe           (fromJust, isJust)
 
