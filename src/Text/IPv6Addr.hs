@@ -152,8 +152,7 @@ toIPv6 = read . show
 --
 getIPv6AddrOf :: String -> IO (Maybe IPv6Addr)
 getIPv6AddrOf s =
-  maybe Nothing (maybeIPv6Addr . T.pack . show) <$>
-    (lookup s <$> networkInterfacesIPv6AddrList)
+  maybe Nothing (maybeIPv6Addr . T.pack . show) . lookup s <$> networkInterfacesIPv6AddrList
 
 -- | Returns a random 'IPv6Addr'.
 randIPv6Addr :: IO IPv6Addr
@@ -264,8 +263,7 @@ macAddrToIPv6AddrTokens t =
 --
 getTokIPv6AddrOf :: String -> IO (Maybe [IPv6AddrToken])
 getTokIPv6AddrOf s =
-  maybe Nothing (maybeTokIPv6Addr. T.pack . show) <$>
-    (lookup s <$> networkInterfacesIPv6AddrList)
+  maybe Nothing (maybeTokIPv6Addr . T.pack . show) . lookup s <$> networkInterfacesIPv6AddrList
 
 -- | Given a valid name of a local network interface,
 -- returns 'Just' the corresponding list of 'IPv6AddrToken' of the interface's MAC Address,
@@ -275,8 +273,7 @@ getTokIPv6AddrOf s =
 --
 getTokMacAddrOf :: String -> IO (Maybe [IPv6AddrToken])
 getTokMacAddrOf s =
-  maybe Nothing (macAddrToIPv6AddrTokens . T.pack . show) <$>
-    (lookup s <$> networkInterfacesMacAddrList)
+  maybe Nothing (macAddrToIPv6AddrTokens . T.pack . show) . lookup s <$> networkInterfacesMacAddrList
   where
     networkInterfacesMacAddrList = getNetworkInterfaces >>=
       \n -> return (networkInterfacesMac <$> n)
