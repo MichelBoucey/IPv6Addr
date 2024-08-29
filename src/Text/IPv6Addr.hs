@@ -33,8 +33,16 @@ import           Data.Aeson
 import           Data.Attoparsec.Text
 import           Data.Char            (intToDigit, isDigit)
 import           Data.IP              (IPv6)
+
+#if !MIN_VERSION_base(4,20,0)
 import           Data.List            (elemIndex, elemIndices, foldl', group,
                                        intersperse, isSuffixOf, uncons)
+#else
+import           Data.List            (elemIndex, elemIndices, group,
+                                       intersperse, isSuffixOf, uncons)
+#endif
+
+
 import           Data.Maybe           (fromJust, isJust)
 
 #if !MIN_VERSION_base(4,11,0)
