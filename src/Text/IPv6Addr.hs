@@ -114,6 +114,7 @@ maybeFullIPv6Addr t =
     (ipv6TokensToIPv6Addr . expandTokens . fromDoubleColon)
 
 -- | Returns 'True' if arguments are two textual representations of a same IPv6 address.
+{-# DEPRECATED sameIPv6Addr "Use the Eq instance." #-}
 sameIPv6Addr :: T.Text -> T.Text -> Bool
 sameIPv6Addr a b =
   case maybePureIPv6Addr a of
