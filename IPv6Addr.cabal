@@ -54,5 +54,4 @@ Test-Suite tests
                     IPv6Addr,
                     test-framework,
                     test-framework-hunit,
-                    text
 
