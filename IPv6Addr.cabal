@@ -40,7 +40,7 @@ library
                   , random       >=1.0 && < 1.4
                   , attoparsec   >=0.12 && < 0.15
                   , aeson        >=2.2.3 && < 2.4
-                  , network-info >=0.2 && <=0.3
+                  , network-info >=0.2 && <0.3
   default-language: Haskell2010
   GHC-Options:      -Wall
 
@@ -49,9 +49,9 @@ Test-Suite tests
   default-language: Haskell2010
   HS-Source-Dirs:   tests
   Main-Is:          Main.hs
-  Build-Depends:    base,
-                    HUnit,
-                    IPv6Addr,
-                    test-framework,
-                    test-framework-hunit
+  Build-Depends:    base
+                  , HUnit
+                  , IPv6Addr
+                  , test-framework
+                  , test-framework-hunit
 
