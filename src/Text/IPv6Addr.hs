@@ -6,7 +6,6 @@ module Text.IPv6Addr
     , maybeIPv6Addr
     , maybePureIPv6Addr
     , maybeFullIPv6Addr
-    , sameIPv6Addr
 
     -- * Conversions
     , toIPv6
@@ -32,7 +31,7 @@ import           Control.Monad        (guard, replicateM)
 import           Data.Aeson
 import           Data.Attoparsec.Text
 import           Data.Char            (intToDigit, isDigit)
-import           Data.IP              (IPv6)
+import qualified Data.IP              as IP (IPv6, fromIPv6b, toIPv6)
 
 #if !MIN_VERSION_base(4,20,0)
 import           Data.List            (elemIndex, elemIndices, foldl', group,
@@ -49,7 +48,7 @@ import           Data.Maybe           (fromJust, isJust)
 import           Data.Monoid          ((<>))
 #endif
 
-import qualified Data.Text            as T hiding (foldl')
+import qualified Data.Text            as T
 import qualified Data.Text.Read       as R (decimal)
 
 #if MIN_VERSION_network (2,7,0)
@@ -68,8 +67,7 @@ instance Show IPv6Addr where
   show (IPv6Addr a) = T.unpack a
 
 instance Eq IPv6Addr where
-  (==) (IPv6Addr a) (IPv6Addr b) =
-    (unIPv6Addr <$> maybePureIPv6Addr a) == (unIPv6Addr <$> maybePureIPv6Addr b)
+  (==) a b = toIPv6 a == toIPv6 b
 
 instance ToJSON IPv6Addr where
   toJSON (IPv6Addr a) = String a
@@ -113,27 +111,17 @@ maybeFullIPv6Addr t =
   maybeTokPureIPv6Addr t >>=
     (ipv6TokensToIPv6Addr . expandTokens . fromDoubleColon)
 
--- | Returns 'True' if arguments are two textual representations of a same IPv6 address.
-{-# DEPRECATED sameIPv6Addr "Use the Eq instance." #-}
-sameIPv6Addr :: T.Text -> T.Text -> Bool
-sameIPv6Addr a b =
-  case maybePureIPv6Addr a of
-    Nothing -> False
-    Just a' ->
-      case maybePureIPv6Addr b of
-        Nothing -> False
-        Just b' -> a' == b'
-
 -- | Returns the reverse lookup domain name corresponding of the given IPv6 address (RFC 3596 Section 2.5).
 --
 -- > toIP6ARPA (IPv6Addr "4321:0:1:2:3:4:567:89ab") == "b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.IP6.ARPA."
 --
 toIP6ARPA :: IPv6Addr -> T.Text
 toIP6ARPA a =
-  T.reverse (T.concatMap go $ unIPv6Addr $ fromJust $ maybeFullIPv6Addr $ unIPv6Addr a) <> "IP6.ARPA."
+  T.intercalate "."
+    (T.singleton <$> reverse (concatMap padHex2 (IP.fromIPv6b (toIPv6 a))))
+  <> ".IP6.ARPA."
   where
-    go ':' = T.empty
-    go c   = "." <> T.pack [c]
+    padHex2 n = let s = showHex n "" in replicate (2 - length s) '0' <> s
 
 -- | Returns the Windows UNC path name of the given IPv6 Address.
 --
@@ -141,18 +129,21 @@ toIP6ARPA a =
 --
 toUNC :: IPv6Addr -> T.Text
 toUNC a =
-  T.concatMap go (unIPv6Addr $ fromJust $ maybePureIPv6Addr $ unIPv6Addr a) <> ".ipv6-literal.net"
+  T.concatMap go (T.pack $ show $ toIPv6 a) <> ".ipv6-literal.net"
   where
     go ':' = "-"
-    go c   = T.pack [c]
+    go c   = T.singleton c
 
 -- | Given an 'IPv6Addr', returns the corresponding 'HostName'.
 toHostName :: IPv6Addr -> HostName
 toHostName = show
 
 -- | Given an 'IPv6Addr', returns the corresponding 'Data.IP.IPv6' address.
-toIPv6 :: IPv6Addr -> Data.IP.IPv6
-toIPv6 = read . show
+toIPv6 :: IPv6Addr -> IP.IPv6
+toIPv6 a =
+  case maybeTokPureIPv6Addr (unIPv6Addr a) >>= tokensToIPv6 of
+    Just v  -> v
+    Nothing -> read (T.unpack $ unIPv6Addr a)
 
 -- | Returns 'Just' the canonized 'IPv6Addr' of the given local network interface,
 -- or 'Nothing'.
@@ -511,6 +502,32 @@ toDoubleColon tks =
 
 ipv6TokensToIPv6Addr :: [IPv6AddrToken] -> Maybe IPv6Addr
 ipv6TokensToIPv6Addr = Just . IPv6Addr . ipv6TokensToText
+
+hexTextToInt :: T.Text -> Int
+hexTextToInt =
+  T.foldl' (\n c -> n * 16 + hexDigitToInt c) 0
+  where
+    hexDigitToInt :: Char -> Int
+    hexDigitToInt c
+      | '0' <= c && c <= '9' = fromEnum c - fromEnum '0'
+      | 'a' <= c && c <= 'f' = fromEnum c - fromEnum 'a' + 10
+      | 'A' <= c && c <= 'F' = fromEnum c - fromEnum 'A' + 10
+      | otherwise            = 0
+
+-- | Convert pure IPv6 tokens (after fromDoubleColon) to 'Data.IP.IPv6' directly.
+tokensToIPv6 :: [IPv6AddrToken] -> Maybe IP.IPv6
+tokensToIPv6 tks = do
+  let expanded = fromDoubleColon tks
+      chunks   = filter isChunk expanded
+  guard (length chunks == 8)
+  Just $ IP.toIPv6 (map chunkToInt chunks)
+  where
+    isChunk SixteenBit{} = True
+    isChunk AllZeros     = True
+    isChunk _            = False
+    chunkToInt AllZeros       = 0
+    chunkToInt (SixteenBit s) = hexTextToInt s
+    chunkToInt _              = 0
 
 networkInterfacesIPv6AddrList :: IO [(String,Network.Info.IPv6)]
 networkInterfacesIPv6AddrList =
