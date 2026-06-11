@@ -1,3 +1,4 @@
+cabal-version:      3.0
 name:               IPv6Addr
 version:            3.0.0.0
 synopsis:           Library to deal with IPv6 address text representations.
@@ -5,7 +6,7 @@ description:
   Library to deal with IPv6 address text representations, canonization and manipulations.
 
 homepage:           https://github.com/MichelBoucey/IPv6Addr
-license:            BSD3
+license:            BSD-3-Clause
 license-file:       LICENSE
 author:             Michel Boucey
 maintainer:         michel.boucey@gmail.com
@@ -14,7 +15,6 @@ category:           Network
 build-type:         Simple
 extra-source-files: README.md
 extra-doc-files:    CHANGELOG.md
-cabal-version:      >=1.10
 tested-with:
   GHC ==8.8.4
    || ==8.10.7
