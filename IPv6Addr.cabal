@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               IPv6Addr
-version:            3.0.0.0
+version:            3.0.0.1
 synopsis:           Library to deal with IPv6 address text representations.
 description:
   Library to deal with IPv6 address text representations, canonization and manipulations.
